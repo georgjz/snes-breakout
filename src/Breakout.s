@@ -20,6 +20,7 @@
 .include "InputUtils.inc"
 .include "SNESRegisters.inc"
 .include "SNESInitialization.inc"
+.include "GameInitialization.inc"
 .include "CPUMacros.inc"
 .include "WRAMPointers.inc"
 ;-------------------------------------------------------------------------------
@@ -47,23 +48,24 @@
         SetA8
         ldx #$1fff              ; set up stack
         txs
-        lda #$8f                ; force v-blanking
+        ; force v-blanking, full screen brightness
+        lda # ($0f | FORCED_BLANKING_ON)
         sta INIDISP
         stz NMITIMEN            ; disable NMI
-        jsl ClearRegisters
-        jsl ClearVRAM
-        jsl ClearCGRAM
+        jsl ClearRegisters      ; clear all registers
+        jsl ClearVRAM           ; clear VRAM to zero/$00
+        jsl ClearCGRAM          ; clear CG-RAM to zero/$00
 
         ; init Game
-        ; jsl InitGame
-        ; jsl ResetOAMBuffer
+        jsl InitGame
+        jsl ResetOAMBuffer
         ; jsl InitVariables
 
         ; make BG2 and Objects visible
         lda #$12
         sta TM
-        ; release forced blanking
-        lda #$0f
+        ; release forced blanking, full screen brightness
+        lda # ($0f | FORCED_BLANKING_OFF)
         sta INIDISP
         ; enable NMI, turn on automatic joypad polling
         lda #$81
@@ -83,7 +85,7 @@
         wai                     ; wait for NMI / V-Blank
 
         ; react to Input
-        ; jsl UpdateSnake
+        ; update background offsets
 
         jmp GameLoop
 .endproc
