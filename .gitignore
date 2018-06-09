@@ -1,0 +1,6 @@
+# Object files
+*.o
+
+# Output directories
+[Bb]uild/
+[Oo]bj/

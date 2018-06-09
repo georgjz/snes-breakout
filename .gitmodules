@@ -1,0 +1,4 @@
+[submodule "nekolibrary"]
+	path = nekolibrary
+	url = https://github.com/georgjz/neko.git
+	branch = master
