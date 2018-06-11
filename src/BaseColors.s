@@ -26,7 +26,7 @@
 ;   Base Colors
 ;-------------------------------------------------------------------------------
 BaseColorTable:
-    .word   $7fff       ; dummy bytes 
+    ; .word   $7fff       ; dummy bytes 
     .word   $001f       ; brick 1 color: red
     .word   $7c00       ; brick 2 color: blue
     .word   $03e0       ; brick 3 color: green

@@ -10,7 +10,7 @@
 ; The above copyright notice and this permission notice shall be included in
 ; all copies or substantial portions of the Software.
 ; -----------------------------------------------------------------------------
-;   File: TileData.s
+;   File: GfxData.s
 ;   Author(s): Georg Ziegler
 ;   Description: This file places the graphics in the ROM
 ;
@@ -24,14 +24,14 @@
 ;-------------------------------------------------------------------------------
 ;   Pointers found in this file
 ;-------------------------------------------------------------------------------
-.export     SpriteSheet
-.export     SpritePalette
+.export    SpriteSheet
+.export    SpritePalette
 ;-------------------------------------------------------------------------------
 
 ;-------------------------------------------------------------------------------
 ;   Pointers to graphics in ROM
 ;-------------------------------------------------------------------------------
-.segment "SPRITEDATA"
+.segment "SPRITEDATA": far
 SpriteSheet:    .incbin "SpriteSheet.vra"
 SpritePalette:  .incbin "SpritePalette.pal"
 ;-------------------------------------------------------------------------------

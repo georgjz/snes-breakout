@@ -21,9 +21,7 @@
 ;-------------------------------------------------------------------------------
 ;   Routines found in this file
 ;-------------------------------------------------------------------------------
-; .import     InitGame
-; .import     InitVariables
-; .import     ResetOAMBuffer
+.import     GenerateColors
 ;-------------------------------------------------------------------------------
 
 .endif  ; COLORGENERATOR_INC
