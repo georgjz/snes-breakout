@@ -58,46 +58,23 @@
         phk                     ; set data bank register...
         plb                     ; ...to current bank address
         SetA16                  ; set A to 16-bit
-        ldx #$02                ; palette counter
-        ldy #$00                ; set offset to $02, which will skip the trans color
+        ldy #$00                ; palette counter/offset
 PaletteLoop:
-        PushSizeW $3c00         ; push trans color
+        ldx #$1e                ; reset color counter
+        ; PushSizeW $3c00         ; push trans color
 ColorLoop:
         lda #$0000              ; clear A
         pha                     ; push new color to stack
-        lda BaseColorTable, Y   ; get base color
-        and #$001f              ; extract R
-        clc
-        adc SpritePalette, X    ; add grayscale shade to R
-        asl                     ; divide by 2
-        and #$001f              ; clear B and G
-        sta $01, S              ; store R in new color
-        ; repeate for green
-        lda BaseColorTable, Y   ; get base color
-        and #$03e0              ; extract G
-        clc
-        adc SpritePalette, X    ; add grayscale shade to G
-        asl                     ; divide by 2
-        and #$03e0              ; clear B and R
-        ora $01, S              ; add G to new color...
-        sta $01, S              ; ...and store it
-        ; repeate for blue
-        lda BaseColorTable, Y   ; get base color
-        and #$7c00              ; extract B
-        clc
-        adc SpritePalette, X    ; add grayscale shade to G
-        asl                     ; divide by 2
-        and #$7c00              ; clear B and R
-        ora $01, S              ; add B to new color...
-        and #$7fff              ; clear MSB
-        sta $01, S              ; ...and store it
-        inx                     ; increment Y by 2
-        inx
-        cpx #$20                ; check if all colors done
-        bcc ColorLoop
+        lda SpritePalette, X    ; get base color
+        ; do the blending, man
+        sta $01, S              ; store new color on stack
+        dex                     ; decrement Y by 2
+        dex
+        cpx #$00                ; check if all colors done
+        bpl ColorLoop           ; if X >= 0, jump
         iny                     ; move to next base color...
         iny                     ; ...by incrementing X by 2
-        ldx #$0002              ; reset color offset
+        ; ldx #$0002              ; reset color offset
         cpy #$0d                ; check if all base colors done
         bcc PaletteLoop
         ; generated palettes are now on the stack
@@ -105,10 +82,11 @@ ColorLoop:
         ; move generated palettes from stack to CG-RAM with DMA. The inital
         ; stack pointer saved in X now points to the low byte of the first palette
         SetA8
+        tsx                     ; get stack pointer
         PushSizeB $e0           ; move 7 palettes to CG-RAM
         PushSizeB $90           ; move to sprite palette starting at palette 1
-        tsx                     ; get stack pointer
-        PushSizeB $00           ; bank of source address
+        PushSizeB $00           ; bank of source address, zero since stack is on ZP
+        inx                     ; increase source address by one, since it is the stack pointer
         phx                     ; high and low bytes of source address
         ; lda #$00              ; reset A
         jsl LoadPalette         ; DMA generated palettes to CG-RAM
