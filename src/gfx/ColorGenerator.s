@@ -52,8 +52,9 @@
         ldx #$00                ; X is used as argument offset
 
         ; blend the base color with the shade from the grayscale
-        ; A - base color
-        ; Y - current color table offset
+        ; A - base color, later blended color
+        ; X - current color
+        ; Y - current palette/base color
         ; final colors/palettes are stored on stack and transfered by DMA to CG-RAM
         phk                     ; set data bank register...
         plb                     ; ...to current bank address
@@ -61,23 +62,90 @@
         ldy #$00                ; palette counter/offset
 PaletteLoop:
         ldx #$1e                ; reset color counter
-        ; PushSizeW $3c00         ; push trans color
+        ; trans color?
 ColorLoop:
         lda #$0000              ; clear A
-        pha                     ; push new color to stack
-        lda SpritePalette, X    ; get base color
-        ; do the blending, man
-        sta $01, S              ; store new color on stack
-        dex                     ; decrement Y by 2
+        pha                     ; push new color to stack/increase stack pointer
+        ; txs/inc combo faster?
+        ; calculate R component of blended color
+        lda SpritePalette, X    ; get grayscale shade
+        and #$001f              ; mask R component
+        xba                     ; move gray R value to higher byte of A
+        pha                     ; save gray R on stack
+        ; sta $01, S              ; save gray R value on stack
+        lda BaseColorTable, Y   ; get base color
+        and #$001f              ; mask R component
+        ora $01, S              ; load gray R component into higher byte
+        sta WRMPYA              ; multiply high and low byte
+        pla ;nop                ; wait for 2..., use to decrease stack pointer
+        nop                     ; ...4...
+        nop                     ; ...6...
+        nop                     ; ...8 cycles
+        lda RDMPYL              ; get multiplication result
+        ; lsr                     ; divide result by 2
+        ShiftARight $05         ; divide result by $20
+        sta $01, S              ; store R component
+
+        ; calculate G component of blended color
+        lda SpritePalette, X    ; get grayscale shade
+        and #$03e0              ; mask R component
+        ShiftARight $05         ; shift right 5 times
+        xba                     ; move gray G value to higher byte of A
+        pha                     ; save gray G value on stack
+        ; sta $01, S              ; save gray G value on stack
+        lda BaseColorTable, Y   ; get base color
+        and #$03e0              ; mask G component
+        ShiftARight $05         ; shift right 5 times
+        ora $01, S              ; load gray G component into higher byte
+        sta WRMPYA              ; multiply high and low byte
+        pla ;nop                ; wait for 2..., decrease stack pointer
+        nop                     ; ...4...
+        nop                     ; ...6...
+        nop                     ; ...8 cycles
+        lda RDMPYL              ; get multiplication result
+        ; lsr                     ; divide result by $20
+        ; OPTIMIZE!!!
+        ShiftARight $05         ; divide result by $20
+        ShiftALeft $05          ; shift left 5 times
+        ora $01, S              ; mix G and R component
+        sta $01, S              ; store GR component
+
+        ; calculate B component of blended color
+        lda SpritePalette, X    ; get grayscale shade
+        and #$7f00              ; mask B component
+        ShiftARight $0a         ; shift right 10 times
+        xba                     ; move gray B value to higher byte of A
+        pha                     ; save gray B value on stack
+        ; sta $01, S              ; save gray B value on stack
+        lda BaseColorTable, Y   ; get base color
+        and #$7f00              ; mask B component
+        ShiftARight $0a         ; shift right 10 times
+        ora $01, S              ; load gray B component into higher byte
+        sta WRMPYA              ; multiply high and low byte
+        pla ;nop                ; wait for 2..., decrease stack pointer
+        nop                     ; ...4...
+        nop                     ; ...6...
+        nop                     ; ...8 cycles
+        lda RDMPYL              ; get multiplication result
+        ; lsr                     ; divide result by 2
+        ShiftARight $05         ; divide result by $20
+        ShiftALeft $0a          ; shift left 5 times
+        ora $01, S              ; mix B, G and R component
+        sta $01, S              ; store BGR555 color on stack
+        ; the blended color is now stored on stack
+        nop
+        ; check loop condition
+        dex                     ; decrement X by 2
         dex
         cpx #$00                ; check if all colors done
-        bpl ColorLoop           ; if X >= 0, jump
-        iny                     ; move to next base color...
-        iny                     ; ...by incrementing X by 2
-        ; ldx #$0002              ; reset color offset
+        bmi :+                  ; if X < 0, go to next palette
+        jmp ColorLoop           ; else calculate next color
+:       iny                     ; move to next base color...
+        iny                     ; ...by incrementing Y by 2
         cpy #$0d                ; check if all base colors done
-        bcc PaletteLoop
-        ; generated palettes are now on the stack
+        bcs :+
+        jmp PaletteLoop
+:       ; generated palettes are now on the stack
 
         ; move generated palettes from stack to CG-RAM with DMA. The inital
         ; stack pointer saved in X now points to the low byte of the first palette
@@ -88,15 +156,13 @@ ColorLoop:
         PushSizeB $00           ; bank of source address, zero since stack is on ZP
         inx                     ; increase source address by one, since it is the stack pointer
         phx                     ; high and low bytes of source address
-        ; lda #$00              ; reset A
         jsl LoadPalette         ; DMA generated palettes to CG-RAM
-        ; txs                     ; restore old stack pointer
 
         ; restore stack pointer to old value
-        tsc
-        clc
-        adc #$e5
-        tcs
+        tsc                     ; load stack pointer into A
+        clc                     ; add palette offset...
+        adc #$e5                ; ...to A
+        tcs                     ; stack pointer now on last byte of palettes/colors
 
         ; SetA8                   ; set A back to 8-bit
         pld                     ; restore callers frame pointer
@@ -104,3 +170,27 @@ ColorLoop:
         rtl
 .endproc
 ;----- end of subroutine GenerateColors ----------------------------------------
+
+;-------------------------------------------------------------------------------
+;   Subroutine: MultiplyColors
+;   Parameters: .word color 1, .word color 2
+;   Description: Multiply two colors and return blended/mixed color
+;-------------------------------------------------------------------------------
+.proc   MultiplyColors
+        PreserveRegisters       ; preserve working registers
+        phd                     ; preserve callers frame pointer
+        tsc                     ; make own frame pointer in D
+        tcd
+        FrameOffset = $0c       ; set frame offset to 12: 11 bytes on stack + 1 offset
+        ldx #$00                ; X is used as argument offset
+        ; variables
+
+
+        ; code
+
+
+        pld                     ; restore callers frame pointer
+        RestoreRegisters        ; restore working registers
+        rtl
+.endproc
+;----- end of subroutine MultiplyColors ----------------------------------------
