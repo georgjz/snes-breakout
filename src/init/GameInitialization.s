@@ -49,7 +49,7 @@
 
         ; load sprite palette into CG-RAM
         tsx                     ; save stack pointer
-        PushSizeB $20           ; move a total of 16 bytes/1 palette
+        PushSizeB $20           ; move a total of 32 bytes/1 palette
         PushSizeB $80           ; CG-RAM destination: $80
         PushFarAddr SpritePalette ; source address for DMA
         jsl LoadPalette         ; call subroutine

@@ -10,28 +10,28 @@
 ; The above copyright notice and this permission notice shall be included in
 ; all copies or substantial portions of the Software.
 ; -----------------------------------------------------------------------------
-;   File: GfxData.s
+;   File: WRAMPointers.s
 ;   Author(s): Georg Ziegler
-;   Description: This file places the graphics in the ROM
+;   Description: This file contains the base colors for the game objects
 ;
-
-;----- Assembler Directives ----------------------------------------------------
-.p816
-.i16
-.a8
-;-------------------------------------------------------------------------------
 
 ;-------------------------------------------------------------------------------
 ;   Pointers found in this file
 ;-------------------------------------------------------------------------------
-.export    SpriteSheet
-.export    SpritePalette
+.export     BaseColorTable  ; Pointer to base colors
 ;-------------------------------------------------------------------------------
 
+.segment "CODE"
 ;-------------------------------------------------------------------------------
-;   Pointers to graphics in ROM
+;   Base Colors
 ;-------------------------------------------------------------------------------
-.segment "SPRITEDATA": far
-SpriteSheet:    .incbin "SpriteSheet.vra"
-SpritePalette:  .incbin "SpritePalette.pal"
+BaseColorTable:
+    ; .word   $7fff       ; dummy bytes 
+    .word   $001f       ; brick 1 color: red
+    .word   $7c00       ; brick 2 color: blue
+    .word   $03e0       ; brick 3 color: green
+    .word   $7c1f       ; brick 4 color: violet
+    .word   $7fe0       ; brick 5 color: light blue
+    .word   $03ff       ; ball color: yellow
+    .word   $7cf7       ; paddle color: violet
 ;-------------------------------------------------------------------------------

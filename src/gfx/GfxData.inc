@@ -10,7 +10,7 @@
 ; The above copyright notice and this permission notice shall be included in
 ; all copies or substantial portions of the Software.
 ; -----------------------------------------------------------------------------
-;   File: GFXData.inc
+;   File: GfxData.inc
 ;   Author(s): Georg Ziegler
 ;   Description: This file is a header, include it to access graphic data
 ;
@@ -21,8 +21,8 @@
 ;-------------------------------------------------------------------------------
 ;   Graphic Addresses
 ;-------------------------------------------------------------------------------
-.import     SpriteSheet
-.import     SpritePalette
+.import     SpriteSheet: far
+.import     SpritePalette: far
 ;-------------------------------------------------------------------------------
 
 .endif  ; GFXDATA_INC

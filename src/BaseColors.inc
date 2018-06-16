@@ -10,28 +10,19 @@
 ; The above copyright notice and this permission notice shall be included in
 ; all copies or substantial portions of the Software.
 ; -----------------------------------------------------------------------------
-;   File: GfxData.s
+;   File: BaseColors.inc
 ;   Author(s): Georg Ziegler
-;   Description: This file places the graphics in the ROM
+;   Description: This file contains the pointers to the base colors for the
+;   game objects
 ;
 
-;----- Assembler Directives ----------------------------------------------------
-.p816
-.i16
-.a8
-;-------------------------------------------------------------------------------
+.ifndef BASECOLORS_INC
+.define BASECOLORS_INC
 
 ;-------------------------------------------------------------------------------
-;   Pointers found in this file
+;   Input Pointers
 ;-------------------------------------------------------------------------------
-.export    SpriteSheet
-.export    SpritePalette
+.import     BaseColorTable      ; Pointer to the base colors
 ;-------------------------------------------------------------------------------
 
-;-------------------------------------------------------------------------------
-;   Pointers to graphics in ROM
-;-------------------------------------------------------------------------------
-.segment "SPRITEDATA": far
-SpriteSheet:    .incbin "SpriteSheet.vra"
-SpritePalette:  .incbin "SpritePalette.pal"
-;-------------------------------------------------------------------------------
+.endif  ; BASECOLORS_INC

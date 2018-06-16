@@ -23,6 +23,7 @@
 .include "GameInitialization.inc"
 .include "CPUMacros.inc"
 .include "WRAMPointers.inc"
+.include "ColorGenerator.inc"
 ;-------------------------------------------------------------------------------
 
 ;----- Assembler Directives ----------------------------------------------------
@@ -59,6 +60,7 @@
         ; init Game
         jsl InitGame
         jsl ResetOAMBuffer
+        jsl GenerateColors
         ; jsl InitVariables
 
         ; make BG2 and Objects visible
