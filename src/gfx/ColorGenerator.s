@@ -51,6 +51,7 @@
         FrameOffset = $0b       ; set frame offset to 11: 10 bytes on stack + 1 offset
         ldx #$00                ; X is used as argument offset
 
+        ; TODO: Potential for cycle golfing with bitmasks
         ; blend the base color with the shade from the grayscale
         ; A - base color, later blended color
         ; X - current color
@@ -72,7 +73,6 @@ ColorLoop:
         and #$001f              ; mask R component
         xba                     ; move gray R value to higher byte of A
         pha                     ; save gray R on stack
-        ; sta $01, S              ; save gray R value on stack
         lda BaseColorTable, Y   ; get base color
         and #$001f              ; mask R component
         ora $01, S              ; load gray R component into higher byte
@@ -82,7 +82,6 @@ ColorLoop:
         nop                     ; ...6...
         nop                     ; ...8 cycles
         lda RDMPYL              ; get multiplication result
-        ; lsr                     ; divide result by 2
         ShiftARight $05         ; divide result by $20
         sta $01, S              ; store R component
 
@@ -92,7 +91,6 @@ ColorLoop:
         ShiftARight $05         ; shift right 5 times
         xba                     ; move gray G value to higher byte of A
         pha                     ; save gray G value on stack
-        ; sta $01, S              ; save gray G value on stack
         lda BaseColorTable, Y   ; get base color
         and #$03e0              ; mask G component
         ShiftARight $05         ; shift right 5 times
@@ -103,8 +101,6 @@ ColorLoop:
         nop                     ; ...6...
         nop                     ; ...8 cycles
         lda RDMPYL              ; get multiplication result
-        ; lsr                     ; divide result by $20
-        ; OPTIMIZE!!!
         ShiftARight $05         ; divide result by $20
         ShiftALeft $05          ; shift left 5 times
         ora $01, S              ; mix G and R component
@@ -116,7 +112,6 @@ ColorLoop:
         ShiftARight $0a         ; shift right 10 times
         xba                     ; move gray B value to higher byte of A
         pha                     ; save gray B value on stack
-        ; sta $01, S              ; save gray B value on stack
         lda BaseColorTable, Y   ; get base color
         and #$7f00              ; mask B component
         ShiftARight $0a         ; shift right 10 times
@@ -127,7 +122,6 @@ ColorLoop:
         nop                     ; ...6...
         nop                     ; ...8 cycles
         lda RDMPYL              ; get multiplication result
-        ; lsr                     ; divide result by 2
         ShiftARight $05         ; divide result by $20
         ShiftALeft $0a          ; shift left 5 times
         ora $01, S              ; mix B, G and R component
@@ -170,27 +164,3 @@ ColorLoop:
         rtl
 .endproc
 ;----- end of subroutine GenerateColors ----------------------------------------
-
-;-------------------------------------------------------------------------------
-;   Subroutine: MultiplyColors
-;   Parameters: .word color 1, .word color 2
-;   Description: Multiply two colors and return blended/mixed color
-;-------------------------------------------------------------------------------
-.proc   MultiplyColors
-        PreserveRegisters       ; preserve working registers
-        phd                     ; preserve callers frame pointer
-        tsc                     ; make own frame pointer in D
-        tcd
-        FrameOffset = $0c       ; set frame offset to 12: 11 bytes on stack + 1 offset
-        ldx #$00                ; X is used as argument offset
-        ; variables
-
-
-        ; code
-
-
-        pld                     ; restore callers frame pointer
-        RestoreRegisters        ; restore working registers
-        rtl
-.endproc
-;----- end of subroutine MultiplyColors ----------------------------------------
