@@ -47,8 +47,14 @@
 .proc   InitGame
         PreserveRegisters       ; preserve working registers
 
-        ; load sprite palette into CG-RAM
+        ; load background palette into CG-RAM
         tsx                     ; save stack pointer
+        PushSizeB $20           ; move a total of 32 bytes/1 palette
+        PushSizeB $00           ; CG-RAM destination: $00
+        PushFarAddr SpritePalette ; source address for DMA
+        jsl LoadPalette         ; call subroutine
+        ; load sprite palette into CG-RAM
+        txs                     ; restore stack pointer
         PushSizeB $20           ; move a total of 32 bytes/1 palette
         PushSizeB $80           ; CG-RAM destination: $80
         PushFarAddr SpritePalette ; source address for DMA
@@ -65,19 +71,43 @@
         txs                     ; restore stack pointer
         ; sprite sheet loaded
 
+        ; load tilemaps into VRAM
+        tsx                     ; save stack pointer
+        PushSizeF $000800       ; size: $00:0800, 2KB
+        PushSizeB $08           ; destination address: segment $08 = $4000
+        PushFarAddr BG1Map      ; origin address
+        jsl LoadTileMap         ; load tilemap
+        txs                     ; restore stack pointer
+        PushSizeF $000800       ; size: $00:0800, 2KB
+        PushSizeB $09           ; destination address: segment $09 = $4800
+        PushFarAddr BG2Map      ; origin address
+        jsl LoadTileMap         ; load tilemap
+        txs                     ; restore stack pointer
+        PushSizeF $000800       ; size: $00:0800, 2KB
+        PushSizeB $0a           ; destination address: segment $0a = $5000
+        PushFarAddr BG3Map      ; origin address
+        jsl LoadTileMap         ; load tilemap
+        txs                     ; restore stack pointer
+        ; tilemaps loaded into VRAM
+
         ; Set up BG options
-        ; set to BG Mode 1, BG2 tile size to 8 x 8 px
-        lda # (BG_MODE_1 | BG2_SIZE_8)
+        ; set to BG Mode 1, all three BGs tile size to 16 x 16 px, BG3 prio = 1
+        lda # (BG_MODE_1 | BG1_SIZE_16 | BG2_SIZE_16 | BG3_SIZE_16 | BG3_PRIO_ON)
         sta BGMODE
-        lda #$10                ; set BG2 Base Address
+        lda #$00                ; set BG1, BG2, and BG3 Base Address to $0000
         sta BG12NBA
-        ; set BG2 sc address to VRAM address, screen size 32 x 32
-        lda # ($00 | BG2_SC_SIZE_32)
+        sta BG34NBA
+        ; set tilemap addresses
+        lda # ($20 | BG1_SC_SIZE_32)    ; BG1: $4000
+        sta BG1SC
+        lda # ($24 | BG2_SC_SIZE_32)    ; BG2: $4800
         sta BG2SC
+        lda # ($28 | BG3_SC_SIZE_32)    ; BG3: $5000
+        sta BG3SC
 
         ; set up OBJ options
-        ; set OAM Address to $4000, small obj 8x8 px, large 32x32 px
-        lda # ($02 | OBJ_SIZE_8_32)
+        ; set OAM Address to $0000, small obj 8x8 px, large 32x32 px
+        lda # ($00 | OBJ_SIZE_8_32)
         sta OBJSEL
 
         RestoreRegisters        ; restore working registers
