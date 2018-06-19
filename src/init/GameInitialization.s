@@ -47,8 +47,8 @@
 .proc   InitGame
         PreserveRegisters       ; preserve working registers
 
-        ; load background palette into CG-RAM
         tsx                     ; save stack pointer
+        ; load background palette into CG-RAM
         PushSizeB $20           ; move a total of 32 bytes/1 palette
         PushSizeB $00           ; CG-RAM destination: $00
         PushFarAddr SpritePalette ; source address for DMA
@@ -63,7 +63,6 @@
         ; sprite palette loaded
 
         ; load Breakout sprite sheet into VRAM
-        tsx                     ; save stack pointer
         PushSizeF $004000       ; size $00:4000
         PushSizeB $00           ; VRAM destination segment: $0000
         PushFarAddr SpriteSheet ; source address for DMA
@@ -72,7 +71,6 @@
         ; sprite sheet loaded
 
         ; load tilemaps into VRAM
-        tsx                     ; save stack pointer
         PushSizeF $000800       ; size: $00:0800, 2KB
         PushSizeB $08           ; destination address: segment $08 = $4000
         PushFarAddr BG1Map      ; origin address
