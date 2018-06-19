@@ -16,16 +16,19 @@
 ;   that can be loaded into CG-RAM
 ;
 
-;----- Includes ----------------------------------------------------------------
+;-------------------------------------------------------------------------------
+;   Includes
+;-------------------------------------------------------------------------------
 .include "SNESRegisters.inc"
-.include "CPUMacros.inc"
+.include "NekoLib.inc"
 .include "WRAMPointers.inc"
 .include "BaseColors.inc"
-.include "MemoryUtils.inc"
 .include "GfxData.inc"
 ;-------------------------------------------------------------------------------
 
-;----- Assembler Directives ----------------------------------------------------
+;-------------------------------------------------------------------------------
+;   Assembler Directives
+;-------------------------------------------------------------------------------
 .p816
 .i16
 .a8
@@ -151,7 +154,8 @@ ColorLoop:
         PushSizeB $00           ; bank of source address, zero since stack is on ZP
         inx                     ; increase source address by one, since it is the stack pointer
         phx                     ; high and low bytes of source address
-        jsl LoadPalette         ; DMA generated palettes to CG-RAM
+        lda #LoadPaletteOpcode
+        jsl NekoLibLauncher     ; DMA generated palettes to CG-RAM
 
         ; restore stack pointer to old value
         tsc                     ; load stack pointer into A

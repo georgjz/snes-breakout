@@ -16,15 +16,18 @@
 ;   data and variables.
 ;
 
-;----- Includes ----------------------------------------------------------------
+;-------------------------------------------------------------------------------
+;   Includes
+;-------------------------------------------------------------------------------
 .include "SNESRegisters.inc"
-.include "CPUMacros.inc"
+.include "NekoLib.inc"
 .include "WRAMPointers.inc"
-.include "MemoryUtils.inc"
 .include "GfxData.inc"
 ;-------------------------------------------------------------------------------
 
-;----- Assembler Directives ----------------------------------------------------
+;-------------------------------------------------------------------------------
+;   Assembler Directives
+;-------------------------------------------------------------------------------
 .p816
 .i16
 .a8
@@ -52,13 +55,15 @@
         PushSizeB $20           ; move a total of 32 bytes/1 palette
         PushSizeB $00           ; CG-RAM destination: $00
         PushFarAddr SpritePalette ; source address for DMA
-        jsl LoadPalette         ; call subroutine
+        lda #LoadPaletteOpcode
+        jsl NekoLibLauncher     ; call subroutine
         ; load sprite palette into CG-RAM
         txs                     ; restore stack pointer
         PushSizeB $20           ; move a total of 32 bytes/1 palette
         PushSizeB $80           ; CG-RAM destination: $80
         PushFarAddr SpritePalette ; source address for DMA
-        jsl LoadPalette         ; call subroutine
+        lda #LoadPaletteOpcode
+        jsl NekoLibLauncher     ; call subroutine
         txs                     ; restore stack pointer
         ; sprite palette loaded
 
@@ -66,7 +71,8 @@
         PushSizeF $004000       ; size $00:4000
         PushSizeB $00           ; VRAM destination segment: $0000
         PushFarAddr SpriteSheet ; source address for DMA
-        jsl LoadTileSet         ; call subroutine
+        lda #LoadTileSetOpcode
+        jsl NekoLibLauncher     ; call subroutine
         txs                     ; restore stack pointer
         ; sprite sheet loaded
 
@@ -74,17 +80,20 @@
         PushSizeF $000800       ; size: $00:0800, 2KB
         PushSizeB $08           ; destination address: segment $08 = $4000
         PushFarAddr BG1Map      ; origin address
-        jsl LoadTileMap         ; load tilemap
+        lda #LoadTileMapOpcode
+        jsl NekoLibLauncher     ; load tilemap
         txs                     ; restore stack pointer
         PushSizeF $000800       ; size: $00:0800, 2KB
         PushSizeB $09           ; destination address: segment $09 = $4800
         PushFarAddr BG2Map      ; origin address
-        jsl LoadTileMap         ; load tilemap
+        lda #LoadTileMapOpcode
+        jsl NekoLibLauncher     ; load tilemap
         txs                     ; restore stack pointer
         PushSizeF $000800       ; size: $00:0800, 2KB
         PushSizeB $0a           ; destination address: segment $0a = $5000
         PushFarAddr BG3Map      ; origin address
-        jsl LoadTileMap         ; load tilemap
+        lda #LoadTileMapOpcode
+        jsl NekoLibLauncher     ; load tilemap
         txs                     ; restore stack pointer
         ; tilemaps loaded into VRAM
 
