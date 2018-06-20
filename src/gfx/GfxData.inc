@@ -21,8 +21,11 @@
 ;-------------------------------------------------------------------------------
 ;   Graphic Addresses
 ;-------------------------------------------------------------------------------
-.import     SpriteSheet: far
-.import     SpritePalette: far
+.import     SpriteSheet:    far
+.import     SpritePalette:  far
+.import     BG1Map:         far
+.import     BG2Map:         far
+.import     BG3Map:         far
 ;-------------------------------------------------------------------------------
 
 .endif  ; GFXDATA_INC

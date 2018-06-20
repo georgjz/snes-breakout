@@ -41,10 +41,11 @@
 ;-------------------------------------------------------------------------------
 ;   Subroutine: GenerateColors
 ;   Parameters: -
-;   Description: Generates color palettes based on the base colors set in BaseColors.inc
+;   Description: Generates color palettes based on the base colors set in BaseColors.s
 ;-------------------------------------------------------------------------------
 .proc   GenerateColors
         PreserveRegisters       ; preserve working registers
+        phb                     ; preserve data bank register
         phd                     ; preserve callers frame pointer
         tsc                     ; make own frame pointer in D
         tcd
@@ -142,7 +143,7 @@ ColorLoop:
 :       ; generated palettes are now on the stack
 
         ; move generated palettes from stack to CG-RAM with DMA. The inital
-        ; stack pointer saved in X now points to the low byte of the first palette
+        ; stack pointer saved in X now points to the first byte of the first palette
         SetA8
         tsx                     ; get stack pointer
         PushSizeB $e0           ; move 7 palettes to CG-RAM
@@ -159,7 +160,8 @@ ColorLoop:
         tcs                     ; stack pointer now on last byte of palettes/colors
 
         ; SetA8                   ; set A back to 8-bit
-        pld                     ; restore callers frame pointer
+        pld                     ; restore caller's frame pointer
+        plb                     ; restore caller's data bank register
         RestoreRegisters        ; restore working registers
         rtl
 .endproc

@@ -26,12 +26,12 @@
 ;   Base Colors
 ;-------------------------------------------------------------------------------
 BaseColorTable:
-    ; .word   $7fff       ; dummy bytes 
-    .word   $001f       ; brick 1 color: red
-    .word   $7c00       ; brick 2 color: blue
-    .word   $03e0       ; brick 3 color: green
-    .word   $7c1f       ; brick 4 color: violet
-    .word   $7fe0       ; brick 5 color: light blue
-    .word   $03ff       ; ball color: yellow
-    .word   $7cf7       ; paddle color: violet
+    .word   $001f       ; base color for sprite palette 7
+    .word   $7c00       ; base color for sprite palette 6
+    .word   $03e0       ; base color for sprite palette 5
+    .word   $7c1f       ; base color for sprite palette 4
+    .word   $7fe0       ; base color for sprite palette 3
+    .word   $03ff       ; base color for sprite palette 2
+    .word   $7cf7       ; base color for sprite palette 1
+    ; sprite palette 0 is the grayscale palette reserved for solid bricks
 ;-------------------------------------------------------------------------------
