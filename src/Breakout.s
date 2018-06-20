@@ -15,18 +15,19 @@
 ;   Description: Entry point for Breakout SNES game
 ;
 
-;----- Includes ----------------------------------------------------------------
-.include "MemoryUtils.inc"
-.include "InputUtils.inc"
+;-------------------------------------------------------------------------------
+;   Includes
+;-------------------------------------------------------------------------------
 .include "SNESRegisters.inc"
-.include "SNESInitialization.inc"
+.include "NekoLib.inc"
 .include "GameInitialization.inc"
-.include "CPUMacros.inc"
 .include "WRAMPointers.inc"
 .include "ColorGenerator.inc"
 ;-------------------------------------------------------------------------------
 
-;----- Assembler Directives ----------------------------------------------------
+;-------------------------------------------------------------------------------
+;   Assembler Directives
+;-------------------------------------------------------------------------------
 .p816
 .i16
 .a8
@@ -53,9 +54,21 @@
         lda # ($0f | FORCED_BLANKING_ON)
         sta INIDISP
         stz NMITIMEN            ; disable NMI
-        jsl ClearRegisters      ; clear all registers
-        jsl ClearVRAM           ; clear VRAM to zero/$00
-        jsl ClearCGRAM          ; clear CG-RAM to zero/$00
+
+        ; clear SNES
+        lda #ClearRegistersOpcode ; clear all registers to standard values
+        jsl NekoLibLauncher
+        lda #ClearVRAMOpcode    ; clear VRAM to zero/$00
+        jsl NekoLibLauncher
+        lda #ClearCGRAMOpcode   ; clear CG-RAM to zero/$00
+        jsl NekoLibLauncher
+
+        phk                     ; restore data bank register
+        plb
+
+        ; jsl ClearRegisters      ; clear all registers
+        ; jsl ClearVRAM           ; clear VRAM to zero/$00
+        ; jsl ClearCGRAM          ; clear CG-RAM to zero/$00
 
         ; init Game
         jsl InitGame
@@ -100,12 +113,14 @@
         lda RDNMI                   ; read NMI status, acknowledge NMI
 
         ; read input
-        jsl PollJoypad1
+        lda #PollJoypad1Opcode
+        jsl NekoLibLauncher
 
         ; transfer OAM data
         tsx                         ; save stack pointer
         PushFarAddr OAMBuffer       ; push source address to stack
-        jsl UpdateOAMRAM
+        lda #UpdateOAMRAMOpcode
+        jsl NekoLibLauncher
         txs                         ; restore stack pointer
 
         rti
