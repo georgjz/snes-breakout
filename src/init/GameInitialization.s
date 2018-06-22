@@ -52,11 +52,11 @@
 
         tsx                     ; save stack pointer
         ; load background palette into CG-RAM
-        PushSizeB $20           ; move a total of 32 bytes/1 palette
-        PushSizeB $00           ; CG-RAM destination: $00
-        PushFarAddr SpritePalette ; source address for DMA
-        lda #LoadPaletteOpcode
-        jsl NekoLibLauncher     ; call subroutine
+        ; PushSizeB $20           ; move a total of 32 bytes/1 palette
+        ; PushSizeB $00           ; CG-RAM destination: $00
+        ; PushFarAddr SpritePalette ; source address for DMA
+        ; lda #LoadPaletteOpcode
+        ; jsl NekoLibLauncher     ; call subroutine
         ; load sprite palette into CG-RAM
         txs                     ; restore stack pointer
         PushSizeB $20           ; move a total of 32 bytes/1 palette
@@ -99,7 +99,7 @@
 
         ; Set up BG options
         ; set to BG Mode 1, all three BGs tile size to 16 x 16 px, BG3 prio = 1
-        lda # (BG_MODE_1 | BG1_SIZE_16 | BG2_SIZE_16 | BG3_SIZE_16 | BG3_PRIO_ON)
+        lda # (BG_MODE_1 | BG1_SIZE_16 | BG2_SIZE_16 | BG3_SIZE_16 | BG3_PRIO_OFF)
         sta BGMODE
         lda #$00                ; set BG1, BG2, and BG3 Base Address to $0000
         sta BG12NBA
@@ -130,7 +130,32 @@
 .proc   InitVariables
         PreserveRegisters       ; preserve working registers
 
-        ; set start positions
+        ; setup three test bricks
+        ; test brick 1: solid
+        lda # ($10 + $00 * $20) ; horizontal position
+        sta OAMBuffer + $00
+        lda # ($10 + $00 * $08) ; vertical position
+        sta OAMBuffer + $01
+        lda #$04                ; object name
+        sta OAMBuffer + $02
+        lda # (%00110000)       ; flip, prio, color
+        sta OAMBuffer + $03
+
+        ; test brick 2: not destroyed
+        lda # ($10 + $01 * $20) ; horizontal position
+        sta OAMBuffer + $04
+        lda # ($10 + $00 * $08) ; vertical position
+        sta OAMBuffer + $05
+        lda #$00                ; object name
+        sta OAMBuffer + $06
+        lda # (%00100010)       ; flip, prio, color
+        sta OAMBuffer + $07
+
+        ; test brick 3: destroyed
+
+        ; fix extra horizontal MSB and size bits
+        lda # (%00001010)
+        sta OAMBuffer + $200
 
         ; initialize background offsets to zero/$00
         ldx #$00
