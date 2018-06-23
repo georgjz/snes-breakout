@@ -10,19 +10,18 @@
 ; The above copyright notice and this permission notice shall be included in
 ; all copies or substantial portions of the Software.
 ; -----------------------------------------------------------------------------
-;   File: BaseColors.inc
+;   File: Levels.inc
 ;   Author(s): Georg Ziegler
-;   Description: This file contains the pointers to the base colors for the
-;   game objects
+;   Description: This file contains the pointers to the levels
 ;
 
-.ifndef BASECOLORS_INC
-.define BASECOLORS_INC
+.ifndef LEVELS_INC
+.define LEVELS_INC
 
 ;-------------------------------------------------------------------------------
-;   Base Color Table Pointer
+;   Level Pointers
 ;-------------------------------------------------------------------------------
-.import     BaseColorTable      ; Pointer to the base colors
+.import     Level01Data: far    ; Pointer to level one
 ;-------------------------------------------------------------------------------
 
-.endif  ; BASECOLORS_INC
+.endif  ; LEVELS_INC

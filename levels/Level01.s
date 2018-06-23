@@ -10,19 +10,28 @@
 ; The above copyright notice and this permission notice shall be included in
 ; all copies or substantial portions of the Software.
 ; -----------------------------------------------------------------------------
-;   File: BaseColors.inc
+;   File: Level01.lvl
 ;   Author(s): Georg Ziegler
-;   Description: This file contains the pointers to the base colors for the
-;   game objects
+;   Description: This file contains level one of Breakout
 ;
 
-.ifndef BASECOLORS_INC
-.define BASECOLORS_INC
+.export     Level01Data
 
+.segment "LEVELS"
 ;-------------------------------------------------------------------------------
-;   Base Color Table Pointer
+;   Level 01 Data
 ;-------------------------------------------------------------------------------
-.import     BaseColorTable      ; Pointer to the base colors
+Level01Data:
+.byte   0, 1, 0, 1, 0, 1, 0     ; row 1
+.byte   0, 1, 0, 1, 0, 1, 0
+.byte   0, 1, 0, 1, 0, 1, 0
+.byte   0, 1, 0, 1, 0, 1, 0
+.byte   0, 1, 0, 1, 0, 1, 0
+.byte   0, 1, 0, 1, 0, 1, 0
+.byte   0, 1, 0, 1, 0, 1, 0
+.byte   0, 1, 0, 1, 0, 1, 0
+.byte   0, 1, 0, 1, 0, 1, 0
+.byte   0, 1, 0, 1, 0, 1, 0
+.byte   0, 1, 0, 1, 0, 1, 0
+.byte   0, 1, 0, 1, 0, 1, 0
 ;-------------------------------------------------------------------------------
-
-.endif  ; BASECOLORS_INC

@@ -10,19 +10,19 @@
 ; The above copyright notice and this permission notice shall be included in
 ; all copies or substantial portions of the Software.
 ; -----------------------------------------------------------------------------
-;   File: BaseColors.inc
+;   File: LevelLoader.inc
 ;   Author(s): Georg Ziegler
-;   Description: This file contains the pointers to the base colors for the
-;   game objects
+;   Description: This a header file for LevelLoader.s, include this
+;   to use the subroutines in afore mentioned file
 ;
 
-.ifndef BASECOLORS_INC
-.define BASECOLORS_INC
+.ifndef LEVELLOADER_INC
+.define LEVELLOADER_INC
 
 ;-------------------------------------------------------------------------------
 ;   Base Color Table Pointer
 ;-------------------------------------------------------------------------------
-.import     BaseColorTable      ; Pointer to the base colors
+.import     LoadLevel           ; Reads a level file and loads data into OAM buffer
 ;-------------------------------------------------------------------------------
 
-.endif  ; BASECOLORS_INC
+.endif  ; LEVELLOADER_INC
