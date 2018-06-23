@@ -152,9 +152,18 @@
         sta OAMBuffer + $07
 
         ; test brick 3: destroyed
+        lda # ($10 + $02 * $20) ; horizontal position
+        sta OAMBuffer + $08
+        lda # ($10 + $00 * $08) ; vertical position
+        sta OAMBuffer + $09
+        lda #$00                ; object name
+        sta OAMBuffer + $0a
+        lda # (%00010100)       ; flip, prio, color
+        sta OAMBuffer + $0b
+
 
         ; fix extra horizontal MSB and size bits
-        lda # (%00001010)
+        lda # (%00101010)
         sta OAMBuffer + $200
 
         ; initialize background offsets to zero/$00

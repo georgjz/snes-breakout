@@ -72,7 +72,7 @@
         jsl InitVariables
 
         ; make BG1, BG2, BG3, and Objects visible
-        lda #$10
+        lda #$13
         sta TM
         ; release forced blanking, full screen brightness
         lda # ($0f | FORCED_BLANKING_OFF)
