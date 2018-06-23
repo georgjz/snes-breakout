@@ -52,11 +52,11 @@
 
         tsx                     ; save stack pointer
         ; load background palette into CG-RAM
-        ; PushSizeB $20           ; move a total of 32 bytes/1 palette
-        ; PushSizeB $00           ; CG-RAM destination: $00
-        ; PushFarAddr SpritePalette ; source address for DMA
-        ; lda #LoadPaletteOpcode
-        ; jsl NekoLibLauncher     ; call subroutine
+        PushSizeB $20           ; move a total of 32 bytes/1 palette
+        PushSizeB $00           ; CG-RAM destination: $00
+        PushFarAddr SpritePalette ; source address for DMA
+        lda #LoadPaletteOpcode
+        jsl NekoLibLauncher     ; call subroutine
         ; load sprite palette into CG-RAM
         txs                     ; restore stack pointer
         PushSizeB $20           ; move a total of 32 bytes/1 palette
@@ -99,7 +99,7 @@
 
         ; Set up BG options
         ; set to BG Mode 1, all three BGs tile size to 16 x 16 px, BG3 prio = 1
-        lda # (BG_MODE_1 | BG1_SIZE_16 | BG2_SIZE_16 | BG3_SIZE_16 | BG3_PRIO_OFF)
+        lda # (BG_MODE_1 | BG1_SIZE_16 | BG2_SIZE_16 | BG3_SIZE_16 | BG3_PRIO_ON)
         sta BGMODE
         lda #$00                ; set BG1, BG2, and BG3 Base Address to $0000
         sta BG12NBA
@@ -179,12 +179,19 @@
 .proc   ResetOAMBuffer
         PreserveRegisters       ; preserve working registers
 
-        ldx #$0000
-        lda #$ff
-loop:   sta OAMBuffer, x
+        ldx #$0000              ; init counter to zero
+        lda #$01
+loop1:  sta OAMBuffer, x
         inx
         cpx #$0221
-        bne loop
+        bne loop1
+
+        ldx #$0000
+        lda #$ff
+loop2:  sta OAMBuffer + $200, x
+        inx
+        cpx #$1d
+        bne loop2
 
         RestoreRegisters        ; restore working registers
         rtl
