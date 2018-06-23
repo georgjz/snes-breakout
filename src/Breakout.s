@@ -62,19 +62,14 @@
         jsl NekoLibLauncher
         lda #ClearCGRAMOpcode   ; clear CG-RAM to zero/$00
         jsl NekoLibLauncher
-
         phk                     ; restore data bank register
         plb
-
-        ; jsl ClearRegisters      ; clear all registers
-        ; jsl ClearVRAM           ; clear VRAM to zero/$00
-        ; jsl ClearCGRAM          ; clear CG-RAM to zero/$00
 
         ; init Game
         jsl InitGame
         jsl ResetOAMBuffer
         jsl GenerateColors
-        ; jsl InitVariables
+        jsl InitVariables
 
         ; make BG1, BG2, BG3, and Objects visible
         lda #$13
@@ -123,7 +118,7 @@
         jsl NekoLibLauncher
         txs                         ; restore stack pointer
 
-        rti
+        rti                         ; NMI interrupt done
 .endproc
 ;-------------------------------------------------------------------------------
 
