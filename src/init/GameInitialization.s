@@ -130,7 +130,32 @@
 .proc   InitVariables
         PreserveRegisters       ; preserve working registers
 
-        ; set start positions
+        ; setup three test bricks
+        ; test brick 1: solid
+        lda # ($10 + $00 * $20) ; horizontal position
+        sta OAMBuffer + $00
+        lda # ($10 + $00 * $08) ; vertical position
+        sta OAMBuffer + $01
+        lda #$04                ; object name
+        sta OAMBuffer + $02
+        lda # (%00110000)       ; flip, prio, color
+        sta OAMBuffer + $03
+
+        ; test brick 2: not destroyed
+        lda # ($10 + $01 * $20) ; horizontal position
+        sta OAMBuffer + $04
+        lda # ($10 + $00 * $08) ; vertical position
+        sta OAMBuffer + $05
+        lda #$00                ; object name
+        sta OAMBuffer + $06
+        lda # (%00100010)       ; flip, prio, color
+        sta OAMBuffer + $07
+
+        ; test brick 3: destroyed
+
+        ; fix extra horizontal MSB and size bits
+        lda # (%00001010)
+        sta OAMBuffer + $200
 
         ; initialize background offsets to zero/$00
         ldx #$00
@@ -154,12 +179,19 @@
 .proc   ResetOAMBuffer
         PreserveRegisters       ; preserve working registers
 
-        ldx #$0000
-        lda #$ff
-loop:   sta OAMBuffer, x
+        ldx #$0000              ; init counter to zero
+        lda #$01
+loop1:  sta OAMBuffer, x
         inx
         cpx #$0221
-        bne loop
+        bne loop1
+
+        ldx #$0000
+        lda #$ff
+loop2:  sta OAMBuffer + $200, x
+        inx
+        cpx #$1d
+        bne loop2
 
         RestoreRegisters        ; restore working registers
         rtl
