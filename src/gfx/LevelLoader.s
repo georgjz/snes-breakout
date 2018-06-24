@@ -49,36 +49,13 @@
 .proc   LoadLevel
         PreserveRegisters       ; preserve working registers
         phd                     ; preserve callers frame pointer
-        ; phb                     ; preserve data bank register
         tsc                     ; make own frame pointer in D
         tdc
         ; set frame offset to 12: 11 bytes on stack + 1 offset
         FrameOffset = $0b
         LevelDataPointer = FrameOffset
         OAMBufferPointer = FrameOffset + $03
-        ldx #$00                ; X is used as argument offset
-        ; CODE
-           ; for brick < 12 * 7
-           ;   read brick color and type
-           ;   brick.HPos = $10 + (brick mod 7) * $20
-           ;   brick.VPos = $10 + (brick mod 8) * $08
-           ;   add new brick to OAM buffer:
-           ;       .word position = brick.VPos << 8 + brick.HPos
-           ;       .word attrib = % 00vs'cccn'nnnn'nnnn
-           ;           if brick.type == zero
-           ;               v = 0
-           ;           else
-           ;               v = 1
-           ;           if brick.type == solid | zero
-           ;               s = 1
-           ;           else
-           ;               s = 0
-           ;           ccc = brick.color
-           ;           if s == 1
-           ;               name = $04
-           ;           else
-           ;               name = $00
-           ;
+
         ; set data bank register
         lda LevelDataPointer + $02, S   ; get bank of level data
         pha                             ; push bank to stack
@@ -144,6 +121,7 @@ OAMAttribDone:
         SetA16                  ; set A to 16-bit
         pha                     ; save position data on stack
 
+        ; TODO: Too complicated; calculate address in X and use stack relative addressing
         ; Calculate the destination address and store position and attribute data in OAM buffer
         ; destination address = (OAMBufferPointer) + 4 * Y
         tya                     ; move brick counter to A
@@ -181,8 +159,6 @@ HMSB:   sta (OAMBufferPointer, S), Y ; store bit mask in OAM buffer
         sta (OAMBufferPointer, S), Y
         ; loading level into OAM buffer done
 
-        ; phk                     ; restore data bank register
-        ; plb
         pld                     ; restore caller's frame pointer
         SetA8                   ; set A to 8-bit
         RestoreRegisters        ; restore working registers
