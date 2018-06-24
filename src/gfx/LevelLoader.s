@@ -97,11 +97,12 @@ BrickLoop:
         beq OAMAttribDone       ; if brick number zero, i.e, empty
         cmp #$01                ; if brick is solid...
         beq SolidBrick          ; ...create a solid brick
-        ShiftALeft $05          ; else, brick number is color/palette number
-        ora #$2004              ; prio = 2, name = $04
+        xba                     ; else, brick number is color/palette number
+        asl                     ; else, brick number is color/palette number
+        ora #$2000              ; prio = 2, name = $00
         jmp OAMAttribDone
 SolidBrick:
-        lda #$3000              ; prio = 3, color = 0, name = 0
+        lda #$3004              ; prio = 3, color = 0, name = $04
 OAMAttribDone:
         pha                     ; save OAM attributes on stack
 
