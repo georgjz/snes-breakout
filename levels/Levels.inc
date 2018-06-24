@@ -22,6 +22,10 @@
 ;   Level Pointers
 ;-------------------------------------------------------------------------------
 .import     Level01Data: far    ; Pointer to level one
+.import     Level02Data: far    ; Pointer to level two
+.import     Level03Data: far    ; Pointer to level three
+.import     Level04Data: far    ; Pointer to level four
+.import     Level05Data: far    ; Pointer to level five
 ;-------------------------------------------------------------------------------
 
 .endif  ; LEVELS_INC

@@ -76,7 +76,7 @@
         ; load level
         tsx                     ; save stack pointer
         PushFarAddr OAMBuffer
-        PushFarAddr Level01Data
+        PushFarAddr Level03Data
         jsl LoadLevel
         txs                     ; restore stack pointer
 
