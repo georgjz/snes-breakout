@@ -49,42 +49,36 @@
 .proc   LoadLevel
         PreserveRegisters       ; preserve working registers
         phd                     ; preserve callers frame pointer
+        ; phb                     ; preserve data bank register
         tsc                     ; make own frame pointer in D
         tdc
-        ; create 2 local variables on stack
-        ; PushSizeB $00
-        ; PushSizeB $00
-        ; row = $01
-        ; column = $02
-        ; set frame offset to 11: 10 bytes on stack + 1 offset
+        ; set frame offset to 12: 11 bytes on stack + 1 offset
         FrameOffset = $0b
         LevelDataPointer = FrameOffset
         OAMBufferPointer = FrameOffset + $03
         ldx #$00                ; X is used as argument offset
-
         ; CODE
-        ; for brick < 12 * 7
-        ;   read brick color and type
-        ;   brick.HPos = $10 + (brick mod 7) * $20
-        ;   brick.VPos = $10 + (brick mod 8) * $08
-        ;   add new brick to OAM buffer:
-        ;       .word position = brick.VPos << 8 + brick.HPos
-        ;       .word attrib = % 00vs'cccn'nnnn'nnnn
-        ;           if brick.type == zero
-        ;               v = 0
-        ;           else
-        ;               v = 1
-        ;           if brick.type == solid | zero
-        ;               s = 1
-        ;           else
-        ;               s = 0
-        ;           ccc = brick.color
-        ;           if s == 1
-        ;               name = $04
-        ;           else
-        ;               name = $00
-        ;
-
+           ; for brick < 12 * 7
+           ;   read brick color and type
+           ;   brick.HPos = $10 + (brick mod 7) * $20
+           ;   brick.VPos = $10 + (brick mod 8) * $08
+           ;   add new brick to OAM buffer:
+           ;       .word position = brick.VPos << 8 + brick.HPos
+           ;       .word attrib = % 00vs'cccn'nnnn'nnnn
+           ;           if brick.type == zero
+           ;               v = 0
+           ;           else
+           ;               v = 1
+           ;           if brick.type == solid | zero
+           ;               s = 1
+           ;           else
+           ;               s = 0
+           ;           ccc = brick.color
+           ;           if s == 1
+           ;               name = $04
+           ;           else
+           ;               name = $00
+           ;
         ; set data bank register
         lda LevelDataPointer + $02, S
         pha
@@ -93,7 +87,28 @@
         ; X - auxiliar for stack operations
         ; Y - current brick counter, auxiliar for division
         ldy #$0000              ; Y will serve as brick counter
-Loop:   tya                     ; get the brick number
+BrickLoop:
+        ; tsx                     ; save stack pointer in X
+        ; calculate OAM attribute data
+        ; SetA8                   ; set A to 8-bit
+        lda (LevelDataPointer, S), Y ; load brick number
+        SetA16                  ; set A to 16-bit
+        and #$00ff              ; clear B
+        beq OAMAttribDone       ; if brick number zero, i.e, empty
+        cmp #$01                ; if brick is solid...
+        beq SolidBrick          ; ...create a solid brick
+        ShiftALeft $05          ; else, brick number is color/palette number
+        ora #$2004              ; prio = 2, name = $04
+        jmp OAMAttribDone
+SolidBrick:
+        lda #$3000              ; prio = 3, color = 0, name = 0
+OAMAttribDone:
+        pha                     ; save OAM attributes on stack
+
+        ; calculate brick position data
+        lda #$00                ; clear A
+        SetA8                   ; set A to 8-bit
+        tya                     ; get the brick counter
         ; calculate horizontal position: HPos = $10 + (brick mod 7) * $20
         ; divide brick number by 7
         phy                     ; save current brick number on stack
@@ -124,19 +139,39 @@ Loop:   tya                     ; get the brick number
         clc                     ; add screen boundry offset...
         adc #$10                ; ...of $10
         xba                     ; final position: VPos in B, HPos in A
-        ply                     ; restore brick counter
-        ; BUG: Address must increase by 4
+        ply                     ; pull brick counter back into Y
         SetA16                  ; set A to 16-bit
+        pha                     ; save position data on stack
+
+        ; Calculate the destination address and store position and attribute data in OAM buffer
+        ; destination address = (OAMBufferPointer) + 4 * Y
+        tya                     ; move brick counter to A
+        ShiftALeft $02          ; multiply brick counter by 4
+        tay                     ; move brick counter back to Y
+        pla                     ; pull position data from stack
+        plx                     ; pull OAM attribute data from stack, necessary for correct stack pointer
         sta (OAMBufferPointer, S), Y ; store position data in OAM buffer
-        SetA8                   ; set A to 8-bit
+        iny                     ; increment offset by 2
+        iny
+        txa                     ; transfer attribute data to A
+        sta (OAMBufferPointer, S), Y ; store attribute data in OAM buffer
+        tya                     ; move brick counter to A
+        dec                     ; decrement offset by 2
+        dec
+        ShiftARight $02         ; divide counter by 4
+        tay                     ; move brick counter back to Y
         ; check brick counter
         iny
         cpy # ($07 * $0c)
-        bcc Loop
+        ; bcc :+
+        bcc BrickLoop
+        ; jmp BrickLoop
+; :       ; loading level into OAM buffer done
 
-        phk                     ; restore data bank register
-        plb
+        ; phk                     ; restore data bank register
+        ; plb
         pld                     ; restore caller's frame pointer
+        SetA8                   ; set A to 8-bit
         RestoreRegisters        ; restore working registers
         rtl
 .endproc
