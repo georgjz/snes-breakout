@@ -23,6 +23,8 @@
 .include "GameInitialization.inc"
 .include "WRAMPointers.inc"
 .include "ColorGenerator.inc"
+.include "Levels.inc"
+.include "LevelLoader.inc"
 ;-------------------------------------------------------------------------------
 
 ;-------------------------------------------------------------------------------
@@ -70,6 +72,13 @@
         jsl ResetOAMBuffer
         jsl GenerateColors
         jsl InitVariables
+
+        ; load level
+        tsx                     ; save stack pointer
+        PushFarAddr OAMBuffer
+        PushFarAddr Level01Data
+        jsl LoadLevel
+        txs                     ; restore stack pointer
 
         ; make BG1, BG2, BG3, and Objects visible
         lda #$13
