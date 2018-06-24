@@ -80,9 +80,9 @@
            ;               name = $00
            ;
         ; set data bank register
-        lda LevelDataPointer + $02, S
-        pha
-        plb
+        lda LevelDataPointer + $02, S   ; get bank of level data
+        pha                             ; push bank to stack
+        plb                             ; set data bank register to bank of level data
         ; A - calculated data, position and OAM attributes
         ; X - auxiliar for stack operations
         ; Y - current brick counter, auxiliar for division
@@ -166,7 +166,19 @@ OAMAttribDone:
         ; bcc :+
         bcc BrickLoop
         ; jmp BrickLoop
-; :       ; loading level into OAM buffer done
+
+        ; correct HPos MSB and size bits
+        SetA16                  ; set A to 16-bit
+        lda #$aaaa              ; bit mask to store
+        ldy #$0200              ; offset into horizontal MSB section of OAM buffer
+HMSB:   sta (OAMBufferPointer, S), Y ; store bit mask in OAM buffer
+        iny
+        iny
+        cpy # ($200 + $14)      ; update data for 80 objects
+        bcc HMSB
+        lda #$55aa              ; HMSB data for objects 80 ~ 83
+        sta (OAMBufferPointer, S), Y
+        ; loading level into OAM buffer done
 
         ; phk                     ; restore data bank register
         ; plb
