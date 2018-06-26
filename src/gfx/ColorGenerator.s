@@ -21,9 +21,9 @@
 ;-------------------------------------------------------------------------------
 .include "SNESRegisters.inc"
 .include "NekoLib.inc"
-.include "WRAMPointers.inc"
 .include "BaseColors.inc"
 .include "GfxData.inc"
+.include "WRAMPointers.inc"
 ;-------------------------------------------------------------------------------
 
 ;-------------------------------------------------------------------------------

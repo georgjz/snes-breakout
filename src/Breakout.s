@@ -21,10 +21,10 @@
 .include "SNESRegisters.inc"
 .include "NekoLib.inc"
 .include "GameInitialization.inc"
-.include "WRAMPointers.inc"
 .include "ColorGenerator.inc"
-.include "Levels.inc"
 .include "LevelLoader.inc"
+.include "Levels.inc"
+.include "WRAMPointers.inc"
 ;-------------------------------------------------------------------------------
 
 ;-------------------------------------------------------------------------------
@@ -127,6 +127,7 @@
         jsl NekoLibLauncher
         txs                         ; restore stack pointer
 
+NMIHandlerDone:
         rti                         ; NMI interrupt done
 .endproc
 ;-------------------------------------------------------------------------------

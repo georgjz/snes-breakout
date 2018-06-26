@@ -21,8 +21,9 @@
 ;-------------------------------------------------------------------------------
 .include "SNESRegisters.inc"
 .include "NekoLib.inc"
-.include "WRAMPointers.inc"
 .include "GfxData.inc"
+.include "MemoryMap.inc"
+.include "WRAMPointers.inc"
 ;-------------------------------------------------------------------------------
 
 ;-------------------------------------------------------------------------------
@@ -69,7 +70,7 @@
 
         ; load Breakout sprite sheet into VRAM
         PushSizeF $004000       ; size $00:4000
-        PushSizeB $00           ; VRAM destination segment: $0000
+        PushSizeB SPRITE_DATA_SEG ; VRAM destination segment: $0000
         PushFarAddr SpriteSheet ; source address for DMA
         lda #LoadTileSetOpcode
         jsl NekoLibLauncher     ; call subroutine
@@ -77,24 +78,27 @@
         ; sprite sheet loaded
 
         ; load tilemaps into VRAM
-        PushSizeF $000800       ; size: $00:0800, 2KB
-        PushSizeB $08           ; destination address: segment $08 = $4000
-        PushFarAddr BG1Map      ; origin address
+        ; game border map
+        PushSizeF $000800           ; size: $00:0800, 2KB
+        PushSizeB BORDER_MAP_SEG    ; destination address: segment $08 = $4000
+        PushFarAddr GameBorderMap   ; origin address
         lda #LoadTileMapOpcode
-        jsl NekoLibLauncher     ; load tilemap
-        txs                     ; restore stack pointer
-        PushSizeF $000800       ; size: $00:0800, 2KB
-        PushSizeB $09           ; destination address: segment $09 = $4800
-        PushFarAddr BG2Map      ; origin address
+        jsl NekoLibLauncher         ; load tilemap
+        txs                         ; restore stack pointer
+        ; opaque screen mask
+        PushSizeF $000800           ; size: $00:0800, 2KB
+        PushSizeB OPAQUE_MAP_SEG    ; destination address: segment $09 = $4800
+        PushFarAddr OpaqueMap       ; origin address
         lda #LoadTileMapOpcode
-        jsl NekoLibLauncher     ; load tilemap
-        txs                     ; restore stack pointer
-        PushSizeF $000800       ; size: $00:0800, 2KB
-        PushSizeB $0a           ; destination address: segment $0a = $5000
-        PushFarAddr BG3Map      ; origin address
+        jsl NekoLibLauncher         ; load tilemap
+        txs                         ; restore stack pointer
+        ; start menu map
+        PushSizeF $000800           ; size: $00:0800, 2KB
+        PushSizeB START_MENU_SEG    ; destination address: segment $0c = $6000
+        PushFarAddr StartMenuMap    ; origin address
         lda #LoadTileMapOpcode
-        jsl NekoLibLauncher     ; load tilemap
-        txs                     ; restore stack pointer
+        jsl NekoLibLauncher         ; load tilemap
+        txs                         ; restore stack pointer
         ; tilemaps loaded into VRAM
 
         ; Set up BG options
@@ -105,11 +109,11 @@
         sta BG12NBA
         sta BG34NBA
         ; set tilemap addresses
-        lda # ($20 | BG1_SC_SIZE_32)    ; BG1: $4000
+        lda # (BORDER_MAP_SEG << 2 | BG1_SC_SIZE_32)    ; BG1: hold the game border
         sta BG1SC
-        lda # ($24 | BG2_SC_SIZE_32)    ; BG2: $4800
+        lda # (OPAQUE_MAP_SEG << 2 | BG2_SC_SIZE_32)    ; BG2: hold the opaque screen
         sta BG2SC
-        lda # ($28 | BG3_SC_SIZE_32)    ; BG3: $5000
+        lda # (START_MENU_SEG << 2 | BG3_SC_SIZE_32)    ; BG3: menu, empty for now
         sta BG3SC
 
         ; set up OBJ options
@@ -129,42 +133,6 @@
 ;-------------------------------------------------------------------------------
 .proc   InitVariables
         PreserveRegisters       ; preserve working registers
-
-        ; setup three test bricks
-        ; test brick 1: solid
-        lda # ($10 + $00 * $20) ; horizontal position
-        sta OAMBuffer + $00
-        lda # ($10 + $00 * $08) ; vertical position
-        sta OAMBuffer + $01
-        lda #$04                ; object name
-        sta OAMBuffer + $02
-        lda # (%00110000)       ; flip, prio, color
-        sta OAMBuffer + $03
-
-        ; test brick 2: not destroyed
-        lda # ($10 + $01 * $20) ; horizontal position
-        sta OAMBuffer + $04
-        lda # ($10 + $00 * $08) ; vertical position
-        sta OAMBuffer + $05
-        lda #$00                ; object name
-        sta OAMBuffer + $06
-        lda # (%00100010)       ; flip, prio, color
-        sta OAMBuffer + $07
-
-        ; test brick 3: destroyed
-        lda # ($10 + $02 * $20) ; horizontal position
-        sta OAMBuffer + $08
-        lda # ($10 + $00 * $08) ; vertical position
-        sta OAMBuffer + $09
-        lda #$00                ; object name
-        sta OAMBuffer + $0a
-        lda # (%00010100)       ; flip, prio, color
-        sta OAMBuffer + $0b
-
-
-        ; fix extra horizontal MSB and size bits
-        lda # (%00101010)
-        sta OAMBuffer + $200
 
         ; initialize background offsets to zero/$00
         ldx #$00

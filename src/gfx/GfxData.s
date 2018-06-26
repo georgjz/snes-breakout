@@ -26,9 +26,10 @@
 ;-------------------------------------------------------------------------------
 .export     SpriteSheet
 .export     SpritePalette
-.export     BG1Map
-.export     BG2Map
-.export     BG3Map
+.export     GameBorderMap
+.export     OpaqueMap
+; .export     TransMap
+.export     StartMenuMap
 ;-------------------------------------------------------------------------------
 
 ;-------------------------------------------------------------------------------
@@ -37,7 +38,8 @@
 .segment "SPRITEDATA": far
 SpriteSheet:    .incbin "SpriteSheet.vra"
 SpritePalette:  .incbin "SpritePalette.pal"
-BG1Map:         .incbin "BG1Border.map"
-BG2Map:         .incbin "BG2Screen.map"
-BG3Map:         .incbin "BG3HUD.map"
+GameBorderMap:  .incbin "GameBorder.map"
+OpaqueMap:      .incbin "OpaqueScreen.map"
+; TransMap:       .incbin "TransScreen.map"
+StartMenuMap:   .incbin "StartMenu.map"
 ;-------------------------------------------------------------------------------
