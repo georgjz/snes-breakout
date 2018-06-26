@@ -26,6 +26,7 @@
 .import     GameBorderMap:  far
 .import     OpaqueMap:      far
 ; .import     TransMap:       far
+.import     SplashMap:      far 
 .import     StartMenuMap:   far
 ;-------------------------------------------------------------------------------
 

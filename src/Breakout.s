@@ -74,13 +74,13 @@
         jsl InitVariables
 
         ; load level
-        tsx                     ; save stack pointer
-        PushFarAddr OAMBuffer
-        PushFarAddr Level03Data
-        jsl LoadLevel
-        txs                     ; restore stack pointer
+        ; tsx                     ; save stack pointer
+        ; PushFarAddr OAMBuffer
+        ; PushFarAddr Level03Data
+        ; jsl LoadLevel
+        ; txs                     ; restore stack pointer
 
-        ; make BG1, BG2, BG3, and Objects visible
+        ; make BG1, BG2, and Objects visible
         lda #$13
         sta TM
         ; release forced blanking, full screen brightness

@@ -29,6 +29,7 @@
 .export     GameBorderMap
 .export     OpaqueMap
 ; .export     TransMap
+.export     SplashMap
 .export     StartMenuMap
 ;-------------------------------------------------------------------------------
 
@@ -41,5 +42,6 @@ SpritePalette:  .incbin "SpritePalette.pal"
 GameBorderMap:  .incbin "GameBorder.map"
 OpaqueMap:      .incbin "OpaqueScreen.map"
 ; TransMap:       .incbin "TransScreen.map"
+SplashMap:      .incbin "SplashScreen.map"
 StartMenuMap:   .incbin "StartMenu.map"
 ;-------------------------------------------------------------------------------

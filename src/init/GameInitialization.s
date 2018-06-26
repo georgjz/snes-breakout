@@ -51,30 +51,30 @@
 .proc   InitGame
         PreserveRegisters       ; preserve working registers
 
-        tsx                     ; save stack pointer
+        tsx                         ; save stack pointer
         ; load background palette into CG-RAM
-        PushSizeB $20           ; move a total of 32 bytes/1 palette
-        PushSizeB $00           ; CG-RAM destination: $00
-        PushFarAddr SpritePalette ; source address for DMA
+        PushSizeB $20               ; move a total of 32 bytes/1 palette
+        PushSizeB $00               ; CG-RAM destination: $00
+        PushFarAddr SpritePalette   ; source address for DMA
         lda #LoadPaletteOpcode
-        jsl NekoLibLauncher     ; call subroutine
+        jsl NekoLibLauncher         ; call subroutine
         ; load sprite palette into CG-RAM
-        txs                     ; restore stack pointer
-        PushSizeB $20           ; move a total of 32 bytes/1 palette
-        PushSizeB $80           ; CG-RAM destination: $80
-        PushFarAddr SpritePalette ; source address for DMA
+        txs                         ; restore stack pointer
+        PushSizeB $20               ; move a total of 32 bytes/1 palette
+        PushSizeB $80               ; CG-RAM destination: $80
+        PushFarAddr SpritePalette   ; source address for DMA
         lda #LoadPaletteOpcode
-        jsl NekoLibLauncher     ; call subroutine
-        txs                     ; restore stack pointer
+        jsl NekoLibLauncher         ; call subroutine
+        txs                         ; restore stack pointer
         ; sprite palette loaded
 
         ; load Breakout sprite sheet into VRAM
-        PushSizeF $004000       ; size $00:4000
-        PushSizeB SPRITE_DATA_SEG ; VRAM destination segment: $0000
-        PushFarAddr SpriteSheet ; source address for DMA
+        PushSizeF $004000           ; size $00:4000
+        PushSizeB SPRITE_DATA_SEG   ; VRAM destination segment: $0000
+        PushFarAddr SpriteSheet     ; source address for DMA
         lda #LoadTileSetOpcode
-        jsl NekoLibLauncher     ; call subroutine
-        txs                     ; restore stack pointer
+        jsl NekoLibLauncher         ; call subroutine
+        txs                         ; restore stack pointer
         ; sprite sheet loaded
 
         ; load tilemaps into VRAM
@@ -89,6 +89,13 @@
         PushSizeF $000800           ; size: $00:0800, 2KB
         PushSizeB OPAQUE_MAP_SEG    ; destination address: segment $09 = $4800
         PushFarAddr OpaqueMap       ; origin address
+        lda #LoadTileMapOpcode
+        jsl NekoLibLauncher         ; load tilemap
+        txs                         ; restore stack pointer
+        ; splash screen map
+        PushSizeF $000800           ; size: $00:0800, 2KB
+        PushSizeB SPLASH_MAP_SEG    ; destination address: segment $0a = $5000
+        PushFarAddr SplashMap       ; origin address
         lda #LoadTileMapOpcode
         jsl NekoLibLauncher         ; load tilemap
         txs                         ; restore stack pointer
@@ -109,11 +116,11 @@
         sta BG12NBA
         sta BG34NBA
         ; set tilemap addresses
-        lda # (BORDER_MAP_SEG << 2 | BG1_SC_SIZE_32)    ; BG1: hold the game border
+        lda # (SPLASH_MAP_SEG << 2 | BG1_SC_SIZE_32)    ; BG1: hold the splash screen
         sta BG1SC
         lda # (OPAQUE_MAP_SEG << 2 | BG2_SC_SIZE_32)    ; BG2: hold the opaque screen
         sta BG2SC
-        lda # (START_MENU_SEG << 2 | BG3_SC_SIZE_32)    ; BG3: menu, empty for now
+        lda # (OPAQUE_MAP_SEG << 2 | BG3_SC_SIZE_32)    ; BG3: menu, empty for now
         sta BG3SC
 
         ; set up OBJ options
@@ -164,7 +171,7 @@ loop1:  sta OAMBuffer, x
         bne loop1
 
         ldx #$0000
-        lda #$ff
+        lda #$ff                ; set horizontol position MSB to 1 to move all sprites offscreen
 loop2:  sta OAMBuffer + $200, x
         inx
         cpx #$1d
