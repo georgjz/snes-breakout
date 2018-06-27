@@ -37,7 +37,7 @@
 ;-------------------------------------------------------------------------------
 ;   Routines found in this file
 ;-------------------------------------------------------------------------------
-.export     InitGame            ; Load basic tile sets and map
+.export     InitGame            ; Load basic tile sets and maps
 .export     InitVariables       ; Initialize the variables in WRAM
 .export     ResetOAMBuffer      ; Resets the OAM to $ff
 ;-------------------------------------------------------------------------------

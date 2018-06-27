@@ -68,13 +68,15 @@
         phk                     ; restore data bank register
         plb
 
-        ; init Game
+        ; init game data
         jsl InitGame
         jsl ResetOAMBuffer
         jsl GenerateColors
         jsl InitVariables
+        phk                     ; restore data bank register
+        plb
 
-        ; intro scroll
+        ; intro
         lda #GAME_STATE_FADE    ; set game state to fading
         sta GameState
         lda #$03                ; make BG1, BG2, and OBJs visible
@@ -84,6 +86,7 @@
         lda #$81                ; enable NMI
         sta NMITIMEN
 
+        ; intro fade
         lda #$00                ; push inital screen brightness to stack
         pha
         tsx                     ; store stack pointer in X to use as offset
@@ -95,9 +98,33 @@ FadeLoop:
         bcs FadeLoopDone        ; ...then fade loop done
         ora FORCED_BLANKING_OFF ; set blanking bit
         sta INIDISP             ; set new screen brightness
-        bra FadeLoop            ; redo loop
+        jmp FadeLoop            ; redo loop
 FadeLoopDone:
         pla                     ; reset stack pointer
+
+        ; intro scroll
+ScrollLoop:
+        wai                     ; wait for NMI
+        SetA16
+        lda BG1VOffset          ; get current vertical offset
+        sec                     ; decrement offset...
+        sbc #$01                ; ...by 1
+        beq ScrollLoopDone      ; if offset down to zero, scrolling is done
+        sta BG1VOffset          ; save new offset
+        SetA8
+        sta BG1VOFS             ; set lower byte of new offset
+        xba                     ; get higher byte of offset
+        and #$1f                ; clear upper 3 bits
+        sta BG1VOFS             ; set higher byte of new offset
+        jmp ScrollLoop          ; redo loop
+ScrollLoopDone:
+        sta BG1VOffset          ; save new offset
+        SetA8
+        ;   get current offset
+        ;   decrement offset
+        ;
+        lda #GAME_STATE_MENU    ; change game state to menu
+        sta GameState
 
         nop                     ; break point for debugger
 
@@ -108,7 +135,6 @@ FadeLoopDone:
 ;-------------------------------------------------------------------------------
 ;   After the ResetHandler will jump to here
 ;-------------------------------------------------------------------------------
-.smart ; keep track of registers widths
 .proc   GameLoop
         wai                     ; wait for NMI / V-Blank
 
@@ -147,7 +173,7 @@ NMIHandlerDone:
 ;-------------------------------------------------------------------------------
 
 ;-------------------------------------------------------------------------------
-;   Is not used in this program
+;   This is not used in this program
 ;-------------------------------------------------------------------------------
 .proc   IRQHandler
         ; code
