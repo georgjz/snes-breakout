@@ -150,6 +150,15 @@
         stx BG2HOffset
         stx BG2VOffset
 
+        ; set vertical offset of background 1 for initial intro scrolling
+        ldx #$00a0              ; offset 10 * 16 = $a0
+        stx BG1VOffset          ; store new offset
+        lda BG1VOffset          ; get lower byte of vertical offset
+        sta BG1VOFS             ; set BG1 vertical offset, lower byte
+        lda BG1VOffset + $01    ; get high byte of vertical offset
+        and #$1f                ; clear upper 3 bits
+        sta BG1VOFS             ; set BG1 vertical offset, bits 8 ~ 12
+
         RestoreRegisters        ; restore working registers
         rtl
 .endproc

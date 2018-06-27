@@ -27,6 +27,7 @@
 .export     Joy2Trig            ; Buttons pressed this frame
 .export     Joy2Held            ; Buttons held from last frame
 .export     OAMBuffer           ; Pointer to OAM Buffer in WRAM
+.export     GameState           ; Holds the current game state
 .export     BG1HOffset          ; Background 1 horizontal offset
 .export     BG1VOffset          ; Background 1 vertical offset
 .export     BG2HOffset          ; Background 2 horizontal offset
@@ -61,8 +62,8 @@
 ;-------------------------------------------------------------------------------
 ;   Variables
 ;-------------------------------------------------------------------------------
-    CGRAMBuffer:        .res    256
     OAMBuffer:          .res    544
+    GameState:          .res    1
 ;-------------------------------------------------------------------------------
 
 .segment "WRAMP1"

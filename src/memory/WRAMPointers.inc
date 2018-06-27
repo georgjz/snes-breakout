@@ -27,8 +27,8 @@
 .import     Joy2Raw             ; Buttons pressed last frame
 .import     Joy2Trig            ; Buttons pressed this frame
 .import     Joy2Held            ; Buttons held from last frame
-.import     CGRAMBuffer         ; Buffer for CG-RAM palette
 .import     OAMBuffer           ; Buffer for OAM data that is updated every frame
+.import     GameState           ; Holds the current game state
 .import     BG1HOffset          ; Background 1 horizontal offset
 .import     BG1VOffset          ; Background 1 vertical offset
 .import     BG2HOffset          ; Background 2 horizontal offset

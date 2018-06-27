@@ -21,6 +21,7 @@
 .include "SNESRegisters.inc"
 .include "NekoLib.inc"
 .include "GameInitialization.inc"
+.include "GameState.inc"
 .include "ColorGenerator.inc"
 .include "LevelLoader.inc"
 .include "Levels.inc"
@@ -73,22 +74,30 @@
         jsl GenerateColors
         jsl InitVariables
 
-        ; load level
-        ; tsx                     ; save stack pointer
-        ; PushFarAddr OAMBuffer
-        ; PushFarAddr Level03Data
-        ; jsl LoadLevel
-        ; txs                     ; restore stack pointer
-
-        ; make BG1, BG2, and Objects visible
-        lda #$13
+        ; intro scroll
+        lda #GAME_STATE_FADE    ; set game state to fading
+        sta GameState
+        lda #$03                ; make BG1, BG2, and OBJs visible
         sta TM
-        ; release forced blanking, full screen brightness
-        lda # ($0f | FORCED_BLANKING_OFF)
+        lda # (FORCED_BLANKING_OFF | $00) ; turn off forced blanking, screen brightness to zero
         sta INIDISP
-        ; enable NMI, turn on automatic joypad polling
-        lda #$81
+        lda #$81                ; enable NMI
         sta NMITIMEN
+
+        lda #$00                ; push inital screen brightness to stack
+        pha
+        tsx                     ; store stack pointer in X to use as offset
+FadeLoop:
+        inc $01, X              ; increment screen brightness by 1
+        wai                     ; wait for NMI interrupt
+        lda $01, X              ; get current screen brightness
+        cmp #$0f                ; check if max brightness...
+        bcs FadeLoopDone        ; ...then fade loop done
+        ora FORCED_BLANKING_OFF ; set blanking bit
+        sta INIDISP             ; set new screen brightness
+        bra FadeLoop            ; redo loop
+FadeLoopDone:
+        pla                     ; reset stack pointer
 
         nop                     ; break point for debugger
 
@@ -115,6 +124,11 @@
 ;-------------------------------------------------------------------------------
 .proc   NMIHandler
         lda RDNMI                   ; read NMI status, acknowledge NMI
+
+        ; check game state
+        lda GameState               ; get current game state
+        cmp #GAME_STATE_FADE        ; if game screen is fading...
+        beq NMIHandlerDone          ; ...skip all calls in NMI
 
         ; read input
         lda #PollJoypad1Opcode
