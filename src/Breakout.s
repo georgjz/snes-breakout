@@ -192,8 +192,8 @@ GameLoopDone:
         ; check game state
         lda GameState               ; get current game state
         ; if game is fading or loading...
-        and # (GAME_STATE_FADE | GAME_STATE_LOAD)
-        bne NMIHandlerDone          ; ...skip all calls in NMI
+        and # (GAME_STATE_LOAD)
+        beq NMIHandlerDone          ; ...skip all calls in NMI
 
         ; read input
         tsx                         ; save stack pointer
@@ -230,6 +230,9 @@ NMIHandlerDone:
 ;-------------------------------------------------------------------------------
 .proc   GameLoopLauncher
         ldx #$00                    ; clear X
+        xba                         ; make sure B is clear/zero
+        and #$00
+        xba
         tax                         ; transfer opcode to X
         phk                         ; switch data bank register...
         plb                         ; ...to current program bank
