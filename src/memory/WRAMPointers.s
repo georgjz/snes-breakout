@@ -28,6 +28,7 @@
 .export     Joy2Held            ; Buttons held from last frame
 .export     OAMBuffer           ; Pointer to OAM Buffer in WRAM
 .export     GameState           ; Holds the current game state
+.export     LevelToLoad         ; Holds the next level that should be loaded
 .export     BG1HOffset          ; Background 1 horizontal offset
 .export     BG1VOffset          ; Background 1 vertical offset
 .export     BG2HOffset          ; Background 2 horizontal offset
@@ -64,6 +65,7 @@
 ;-------------------------------------------------------------------------------
     OAMBuffer:          .res    544
     GameState:          .res    1
+    LevelToLoad:        .res    1
 ;-------------------------------------------------------------------------------
 
 .segment "WRAMP1"

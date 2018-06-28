@@ -23,7 +23,8 @@
 ;-------------------------------------------------------------------------------
 GAME_STATE_FADE     = $00       ; Game screen is fading in or out
 GAME_STATE_MENU     = $01       ; Game is displaying start menu
-GAME_STATE_RUN      = $02       ; Game is running 
+GAME_STATE_RUN      = $02       ; Game is running
+GAME_STATE_LOAD     = $03       ; Game is loading a level
 ;-------------------------------------------------------------------------------
 
 .endif  ; GAMESTATE_INC
