@@ -87,20 +87,11 @@
         sta NMITIMEN
 
         ; intro fade
-        lda #$00                ; push inital screen brightness to stack
-        pha
-        tsx                     ; store stack pointer in X to use as offset
-FadeLoop:
-        inc $01, X              ; increment screen brightness by 1
-        wai                     ; wait for NMI interrupt
-        lda $01, X              ; get current screen brightness
-        cmp #$0f                ; check if max brightness...
-        bcs FadeLoopDone        ; ...then fade loop done
-        ora FORCED_BLANKING_OFF ; set blanking bit
-        sta INIDISP             ; set new screen brightness
-        jmp FadeLoop            ; redo loop
-FadeLoopDone:
-        pla                     ; reset stack pointer
+.export Debug1
+Debug1:
+        jsr FadeIn
+        ; jsr FadeOut
+        ; jsr FadeIn
 
         ; intro scroll
 ScrollLoop:
@@ -120,10 +111,6 @@ ScrollLoop:
 ScrollLoopDone:
         tax                     ; transfer to X for 16-bit operations
         stx BG1VOffset          ; save new offset
-        SetA8
-        ;   get current offset
-        ;   decrement offset
-        ;
         lda #GAME_STATE_MENU    ; change game state to menu
         sta GameState
 
@@ -137,9 +124,15 @@ ScrollLoopDone:
 ;   After the ResetHandler will jump to here
 ;-------------------------------------------------------------------------------
 .proc   GameLoop
+        SetA8                   ; safe guard against weird RTI behavior
         wai                     ; wait for NMI / V-Blank
 
-        ; react to Input
+        ; check for start button when in menu state
+        SetA16
+        lda Joy1Trig            ; load the buttons pressed last frame
+        and #MASK_BUTTON_START  ; check if start button was pressed
+        beq GameLoopDone        ; if start button not pressed, game loop done
+
         ; if game state = menu
         ;   if start button pressed
         ;       fade out
@@ -163,6 +156,7 @@ GameLoopDone:
 ;   Will be called during V-Blank
 ;-------------------------------------------------------------------------------
 .proc   NMIHandler
+        .a8
         lda RDNMI                   ; read NMI status, acknowledge NMI
 
         ; check game state
@@ -194,5 +188,73 @@ NMIHandlerDone:
 .proc   IRQHandler
         ; code
         rti
+.endproc
+;-------------------------------------------------------------------------------
+
+;----- Some simple helper subroutines ------------------------------------------
+
+;-------------------------------------------------------------------------------
+;   Fade in screen
+;-------------------------------------------------------------------------------
+.proc   FadeIn
+        ; PreserveRegisters           ; preserve working registers
+
+        SetA8
+        lda GameState               ; save current game state...
+        pha                         ; ...on stack
+        lda #GAME_STATE_FADE        ; set game state...
+        sta GameState               ; ...to fading
+        lda #00                     ; set inital screen brightness...
+        sta INIDISP                 ; ...to zero...
+        pha                         ; ...and store on stack
+        tsx                         ; move stack pointer to X to use as offset
+FadeLoop:
+        wai                         ; wait for NMI
+        inc $01, X                  ; increment screen brightness by one
+        lda $01, X                  ; load new screen brightness
+        sta INIDISP                 ; set new screen brightness
+        cmp #$0f                    ; check if brightness has reached max...
+        bcs FadeLoopDone            ; ...then the fade is done
+        jmp FadeLoop                ; redo loop
+FadeLoopDone:
+        pla                         ; increment stack pointer
+        pla                         ; pull old game state...
+        sta GameState               ; ...and restore it
+
+        ; RestoreRegisters            ; restore working registers
+        rts
+.endproc
+;-------------------------------------------------------------------------------
+
+;-------------------------------------------------------------------------------
+;   Fade out screen
+;-------------------------------------------------------------------------------
+.proc   FadeOut
+        ; PreserveRegisters           ; preserve working registers
+
+        SetA8
+        lda GameState               ; save current game state...
+        pha                         ; ...on stack
+        lda #GAME_STATE_FADE        ; set game state...
+        sta GameState               ; ...to fading
+        lda #$0f                    ; set inital screen brightness...
+        sta INIDISP                 ; ...to max...
+        pha                         ; ...and store on stack
+        tsx                         ; move stack pointer to X to use as offset
+FadeLoop:
+        wai                         ; wait for NMI
+        dec $01, X                  ; decrement screen brightness by one
+        lda $01, X                  ; load new screen brightness
+        sta INIDISP                 ; set new screen brightness
+        cmp #$00                    ; check if brightness has reached zero...
+        bcs FadeLoopDone            ; ...then the fade is done
+        jmp FadeLoop                ; redo loop
+FadeLoopDone:
+        pla                         ; increment stack pointer
+        pla                         ; pull old game state...
+        sta GameState               ; ...and restore it
+
+        ; RestoreRegisters            ; restore working registers
+        rts
 .endproc
 ;-------------------------------------------------------------------------------
