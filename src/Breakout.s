@@ -106,19 +106,20 @@ FadeLoopDone:
 ScrollLoop:
         wai                     ; wait for NMI
         SetA16
-        lda BG1VOffset          ; get current vertical offset
-        sec                     ; decrement offset...
-        sbc #$01                ; ...by 1
-        beq ScrollLoopDone      ; if offset down to zero, scrolling is done
-        sta BG1VOffset          ; save new offset
+        lda BG1VOffset          ; get current offset
+        dec                     ; decrement offset by one
+        sta BG1VOffset          ; store new offset
         SetA8
-        sta BG1VOFS             ; set lower byte of new offset
-        xba                     ; get higher byte of offset
-        and #$1f                ; clear upper 3 bits
-        sta BG1VOFS             ; set higher byte of new offset
-        jmp ScrollLoop          ; redo loop
+        sta BG1VOFS             ; store new offset, low byte
+        xba                     ; clear upper 3 bits...
+        and #$1f                ; of high byte of new offset
+        sta BG1VOFS             ; store new offset, bits 8 ~ 12
+        xba                     ; restore new offset, sets Z flag
+        beq ScrollLoopDone      ; if offset is zero, scrolling finished
+        jmp ScrollLoop
 ScrollLoopDone:
-        sta BG1VOffset          ; save new offset
+        tax                     ; transfer to X for 16-bit operations
+        stx BG1VOffset          ; save new offset
         SetA8
         ;   get current offset
         ;   decrement offset
