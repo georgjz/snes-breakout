@@ -128,50 +128,6 @@ ScrollLoopDone:
         lda GameState           ; get the current game state
         jsr GameLoopLauncher    ; call the appropiate handler
 
-        ; check for start button when in menu state
-        ; SetA16
-        ; lda Joy1Trig            ; load the buttons pressed last frame
-        ; and #MASK_BUTTON_START  ; check if start button was pressed
-        ; beq GameLoopDone        ; if start button not pressed, game loop done
-        ; SetA8
-        ; jsr FadeOut             ; fade out screen to begin level loading
-        ; lda # (FORCED_BLANKING_ON) ; turn on forced blanking
-        ; sta INIDISP
-        ; stz NMITIMEN            ; disable NMI
-        ; ; load level 01
-        ; ;   set BG1 to border
-        ; lda # (BORDER_MAP_SEG << 2 | BG1_SC_SIZE_32)
-        ; sta BG1SC
-        ; tsx                     ; save stack pointer
-        ; PushFarAddr OAMBuffer   ; pass pointer to OAM buffer
-        ; PushFarAddr Level01Data ; pass pointer to level data
-        ; jsl LoadLevel           ; load level
-        ; txs                     ; restore stack pointer
-        ; PushFarAddr OAMBuffer   ; pass pointer to OAM buffer
-        ; lda #UpdateOAMRAMOpcode
-        ; jsl NekoLibLauncher
-        ; txs                     ; restore stack pointer
-        ; ;   set game state to run
-        ; lda #GAME_STATE_RUN
-        ; sta GameState
-        ; ;   turn off forced blanking and turn on NMI
-        ; lda # (FORCED_BLANKING_OFF | $0f)
-        ; sta INIDISP
-        ; lda #$13                ; turn on BG1, BG2, and OBJs
-        ; sta TM
-        ; lda #$81
-        ; sta NMITIMEN            ; turn on MNI
-        ; jsr FadeIn              ; fade into new level
-
-        ; if game state = menu
-        ;   if start button pressed
-        ;       fade out
-        ;       turn off NMI, forced blanking on
-        ;       load level
-        ;       turn on NMI, forced blanking off
-        ;       fade in
-        ; update background offsets
-
         ; if game state = run
         ;   update Paddle
         ;   update Ball
