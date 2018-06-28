@@ -139,8 +139,22 @@ ScrollLoopDone:
         wai                     ; wait for NMI / V-Blank
 
         ; react to Input
+        ; if game state = menu
+        ;   if start button pressed
+        ;       fade out
+        ;       turn off NMI, forced blanking on
+        ;       load level
+        ;       turn on NMI, forced blanking off
+        ;       fade in
         ; update background offsets
 
+        ; if game state = run
+        ;   update Paddle
+        ;   update Ball
+        ;       do collision checks
+
+
+GameLoopDone:
         jmp GameLoop
 .endproc
 ;-------------------------------------------------------------------------------
@@ -157,11 +171,13 @@ ScrollLoopDone:
         beq NMIHandlerDone          ; ...skip all calls in NMI
 
         ; read input
+        tsx                         ; save stack pointer
+        PushFarAddr Joy1Raw
         lda #PollJoypad1Opcode
         jsl NekoLibLauncher
 
         ; transfer OAM data
-        tsx                         ; save stack pointer
+        txs                         ; restore stack pointer
         PushFarAddr OAMBuffer       ; push source address to stack
         lda #UpdateOAMRAMOpcode
         jsl NekoLibLauncher
