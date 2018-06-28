@@ -153,7 +153,6 @@ ScrollLoopDone:
         ;   update Ball
         ;       do collision checks
 
-
 GameLoopDone:
         jmp GameLoop
 .endproc
@@ -172,9 +171,9 @@ GameLoopDone:
 
         ; read input
         tsx                         ; save stack pointer
-        PushFarAddr Joy1Raw
+        PushFarAddr Joy1Raw         ; push address of where to store joypad data
         lda #PollJoypad1Opcode
-        jsl NekoLibLauncher
+        jsl NekoLibLauncher         ; poll joypad data and store in provided pointer
 
         ; transfer OAM data
         txs                         ; restore stack pointer
