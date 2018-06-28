@@ -256,6 +256,13 @@ HandleMenuStateDone:
 ;-------------------------------------------------------------------------------
 .proc   HandleRunState
         ; code
+        ; update paddle
+        ; update ball
+        ;   do collision checks
+        ; if level won
+        ;   display level
+        ;   increase level
+        ;   set game state to load
         rts
 .endproc
 ;-------------------------------------------------------------------------------
