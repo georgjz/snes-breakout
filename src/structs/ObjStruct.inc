@@ -10,30 +10,26 @@
 ; The above copyright notice and this permission notice shall be included in
 ; all copies or substantial portions of the Software.
 ; -----------------------------------------------------------------------------
-;   File: BrickStruct.inc
+;   File: ObjStruct.inc
 ;   Author(s): Georg Ziegler
-;   Description: This file contains the definition of a struct that represents
-;   a single brick on the playing field
+;   Description: This file contains the definition of a struct that holds the
+;   paddle and the ball
 ;
 
-.ifndef BRICKSTRUCT_INC
-.define BRICKSTRUCT_INC
+.ifndef OBJECTSTRUCT_INC
+.define OBJECTSTRUCT_INC
 
 ;-------------------------------------------------------------------------------
-;   Constants for use in logical expressions
+;   Data structure for keeping track of the state of the paddle and the ball
 ;-------------------------------------------------------------------------------
-DESTROYED   = $02
-IS_SOLID    = $01
-;-------------------------------------------------------------------------------
-
-;-------------------------------------------------------------------------------
-;   Data structure for keeping track of the state of a brick
-;-------------------------------------------------------------------------------
-.struct     Brick
+.struct     ObjData
             HPos            .byte       ; horizontal position
             VPos            .byte       ; vertical position
-            State           .byte       ; Standing and facing direction
+            HSpeed          .byte       ; horizontal speed
+            VSpeed          .byte       ; vertical speed
+            HSize           .byte       ; horizontal size
+            VSize           .byte       ; vertical size
 .endstruct
 ;-------------------------------------------------------------------------------
 
-.endif  ; BRICKSTRUCT_INC
+.endif  ; OBJECTSTRUCT_INC
