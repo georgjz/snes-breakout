@@ -30,6 +30,8 @@
 .import     OAMBuffer           ; Buffer for OAM data that is updated every frame
 .import     GameState           ; Holds the current game state
 .import     LevelToLoad         ; Holds the next level that should be loaded
+.import     Ball                ; Holds the data of the ball
+.import     Paddle              ; Holds the data of the paddle
 .import     BG1HOffset          ; Background 1 horizontal offset
 .import     BG1VOffset          ; Background 1 vertical offset
 .import     BG2HOffset          ; Background 2 horizontal offset

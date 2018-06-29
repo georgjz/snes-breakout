@@ -255,10 +255,28 @@ HandleMenuStateDone:
 ;   Description: Handles all the game logic while the game is running
 ;-------------------------------------------------------------------------------
 .proc   HandleRunState
-        ; code
         ; update paddle
+        ;   calculate new position
+        ;   check for collision with walls
+        ;   if collision
+        ;       reset position to touch wall
+        ;
         ; update ball
         ;   do collision checks
+        ;       check collision with paddle
+        ;           if collision
+        ;               calculate new ball speed
+        ;               skip brick collision
+        ;       check collision with bricks:
+        ;       for i : bricks
+        ;           if (!brick is visible)
+        ;               next
+        ;           if (brick and ball collide)
+        ;               calculate new ball speed
+        ;               if (!brick is solid)
+        ;                   set brick visibility to false
+        ;               skip remaining bricks
+        ;
         ; if level won
         ;   display level
         ;   increase level
@@ -282,6 +300,7 @@ HandleMenuStateDone:
         lda #$00                ; reset high byte of A
         xba
         PushFarAddr OAMBuffer   ; pass pointer to OAM buffer
+        ; TODO: Too complicated, simplify pointer calculation
         lda LevelToLoad         ; load level to load
         clc                     ; "multiply" by 3
         adc LevelToLoad
@@ -338,7 +357,7 @@ HandleMenuStateDone:
 ;-------------------------------------------------------------------------------
 .proc   FadeIn
         ; PreserveRegisters           ; preserve working registers
-
+        ; prepare registers for fading
         SetA8
         lda GameState               ; save current game state...
         pha                         ; ...on stack
@@ -371,7 +390,7 @@ FadeLoopDone:
 ;-------------------------------------------------------------------------------
 .proc   FadeOut
         ; PreserveRegisters           ; preserve working registers
-
+        ; prepare registers for fading
         SetA8
         lda GameState               ; save current game state...
         pha                         ; ...on stack
