@@ -23,6 +23,7 @@
 .include "NekoLib.inc"
 .include "GfxData.inc"
 .include "MemoryMap.inc"
+.include "ObjStruct.inc"
 .include "WRAMPointers.inc"
 ;-------------------------------------------------------------------------------
 
@@ -140,6 +141,29 @@
 ;-------------------------------------------------------------------------------
 .proc   InitVariables
         PreserveRegisters       ; preserve working registers
+
+        ; set inital paddle data
+        lda #$70                ; set horizontal position
+        sta Paddle+ObjData::HPos
+        lda #$c8                ; set vertical position
+        sta Paddle+ObjData::VPos
+        lda #$02                ; set horizontal speed
+        sta Paddle+ObjData::HSpeed
+        lda #$00                ; set vertical speed
+        sta Paddle+ObjData::VSpeed
+        lda #$28                ; set horizontal size
+        sta Paddle+ObjData::HSize
+        lda #$08                ; set vertical size
+        sta Paddle+ObjData::VSize
+        SetA16
+        ldx #$150
+        lda Paddle+ObjData::HPos
+        sta OAMBuffer, X        ; store position data in OAM buffer
+        inx
+        inx
+        lda #$3e40
+        sta OAMBuffer, X        ; store OAM attribute data
+        SetA8
 
         ; initialize background offsets to zero/$00
         ldx #$00
