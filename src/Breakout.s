@@ -289,19 +289,12 @@ MoveLeft:
 UpdatePaddleOAM:
         pla                     ; pull new horizontal position from stack
         sta Paddle+ObjData::HPos  ; store new horizontal position
-        xba                     ; load paddle vertical position into B
-        lda Paddle+ObjData::VPos
-        xba                     ; vertical position now in B, horizontal position in A
         ldx #PADDLE_OAM_OFFSET  ; use X as offset into OAM buffer
-        SetA16
         sta OAMBuffer, X        ; store new paddle positions on OAM buffer
-        SetA8
         clc                     ; add 32/$20 for second sprite
         adc #$20
-        SetA16
         sta OAMBuffer + $04, X  ; store positions for second sprite
 PaddleDone:
-        SetA8
 
         ;   calculate new position
         ;   check for collision with walls
