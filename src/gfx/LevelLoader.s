@@ -155,7 +155,7 @@ HMSB:   sta (OAMBufferPointer, S), Y ; store bit mask in OAM buffer
         iny
         cpy # ($200 + $14)      ; update data for 80 objects
         bcc HMSB
-        lda #$5aaa              ; HMSB data for objects 80 ~ 83
+        lda #$5aaa              ; HMSB data for objects 80 ~ 83, paddle sprites, and ball
         sta (OAMBufferPointer, S), Y
         ; loading level into OAM buffer done
 

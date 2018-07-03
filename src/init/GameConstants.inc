@@ -10,21 +10,24 @@
 ; The above copyright notice and this permission notice shall be included in
 ; all copies or substantial portions of the Software.
 ; -----------------------------------------------------------------------------
-;   File: GameInitialization.inc
+;   File: GameConstants.inc
 ;   Author(s): Georg Ziegler
-;   Description: This a header file for GameInitialization.s, include this
-;   to use the subroutines in afore mentioned file
+;   Description: This a header file contains constants used throughout the game.
 ;
 
-.ifndef GAMEINITIALIZATION_INC
-.define GAMEINITIALIZATION_INC
+.ifndef GAMECONSTANTS_INC
+.define GAMECONSTANTS_INC
 
 ;-------------------------------------------------------------------------------
-;   Routines found in this file
+;   Game Constants
 ;-------------------------------------------------------------------------------
-.import     InitGame
-.import     InitVariables
-.import     ResetOAMBuffer
+PADDLE_START_HPOS   = $6c
+PADDLE_START_VPOS   = $d0
+UPPER_BOUNDRY       = $11
+LOWER_BOUNDRY       = $e0
+LEFT_BOUNDRY        = $10
+RIGHT_BOUNDRY       = $ef
+PADDLE_OAM_OFFSET   = $150
 ;-------------------------------------------------------------------------------
 
-.endif  ; GAMEINITIALIZATION_INC
+.endif  ; GACONSTANTS_INC

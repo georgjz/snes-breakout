@@ -20,12 +20,14 @@
 ;-------------------------------------------------------------------------------
 .include "SNESRegisters.inc"
 .include "NekoLib.inc"
+.include "GameConstants.inc"
 .include "GameInitialization.inc"
 .include "GameState.inc"
 .include "ColorGenerator.inc"
 .include "LevelLoader.inc"
 .include "Levels.inc"
 .include "MemoryMap.inc"
+.include "ObjStruct.inc"
 .include "WRAMPointers.inc"
 ;-------------------------------------------------------------------------------
 
@@ -256,10 +258,56 @@ HandleMenuStateDone:
 ;-------------------------------------------------------------------------------
 .proc   HandleRunState
         ; update paddle
+        SetA16
+        lda Joy1Trig            ; load buttons last frame...
+        ora Joy1Held            ; ...and combine with held buttons
+        and # (MASK_BUTTON_LEFT | MASK_BUTTON_RIGHT) ; check if right/left button pressed
+        SetA8
+        tay                     ; save pressed button in Y
+        beq PaddleDone          ; if non pressed, paddle update done
+        lda Paddle+ObjData::HPos  ; get current horizontal position
+        cpy #MASK_BUTTON_LEFT   ; if left button was pressed...
+        beq MoveLeft            ; ...move paddle to the left
+        clc                     ; else, add horizontal speed to current position
+        adc Paddle+ObjData::HSpeed
+        pha                     ; save new position on stack
+        lda #RIGHT_BOUNDRY      ; get right playfield boundry
+        sec                     ; subtract paddle horizontal size
+        sbc Paddle+ObjData::HSize
+        cmp $01, S              ; compare to new position on stack
+        bcs UpdatePaddleOAM     ; if new paddle position is smaller than boundry - size, all good
+        sta $01, S              ; else, overwrite new position with boundry - size
+        jmp UpdatePaddleOAM     ; and jump to next step
+MoveLeft:
+        sec                     ; subract paddle horizontal speed
+        sbc Paddle+ObjData::HSpeed
+        pha                     ; push new position to stack
+        lda #LEFT_BOUNDRY       ; get left playfield boundry
+        cmp $01, S              ; compare to new position
+        bcc UpdatePaddleOAM     ; if left boundry smaller than new position, all good
+        sta $01, S              ; else, overwrite new horizontal position with left boundry
+UpdatePaddleOAM:
+        pla                     ; pull new horizontal position from stack
+        sta Paddle+ObjData::HPos  ; store new horizontal position
+        xba                     ; load paddle vertical position into B
+        lda Paddle+ObjData::VPos
+        xba                     ; vertical position now in B, horizontal position in A
+        ldx #PADDLE_OAM_OFFSET  ; use X as offset into OAM buffer
+        SetA16
+        sta OAMBuffer, X        ; store new paddle positions on OAM buffer
+        SetA8
+        clc                     ; add 32/$20 for second sprite
+        adc #$20
+        SetA16
+        sta OAMBuffer + $04, X  ; store positions for second sprite
+PaddleDone:
+        SetA8
+
         ;   calculate new position
         ;   check for collision with walls
         ;   if collision
         ;       reset position to touch wall
+        ; update paddle OAM
         ;
         ; update ball
         ;   do collision checks
@@ -322,7 +370,31 @@ HandleMenuStateDone:
         lda # (BORDER_MAP_SEG << 2 | BG1_SC_SIZE_32)
         sta BG1SC
 
-        ; reset paddle and ball
+        ; reset paddle
+        lda #PADDLE_START_HPOS  ; set horizontal position
+        sta Paddle+ObjData::HPos
+        lda #PADDLE_START_VPOS  ; set vertical position
+        sta Paddle+ObjData::VPos
+        ; rest paddle OAM
+        SetA16
+        ldx #PADDLE_OAM_OFFSET  ; use X as offset into OAM buffer
+        lda Paddle+ObjData::HPos ; get current position data
+        tay                     ; save position in Y
+        sta OAMBuffer, X
+        lda #$3e40              ; no flip, palette 7, name $40
+        sta OAMBuffer + $02, X
+        tya                     ; restore position in A
+        SetA8
+        clc                     ; add 32/$20 to horizontal position for second sprite
+        adc #$20
+        SetA16
+        sta OAMBuffer + $04, X  ; set position for second sprite
+        lda #$3e44              ; no flip, palette 7, name $44
+        sta OAMBuffer + $06, X
+        SetA8
+
+        ; reset ball
+
 
         ; update OAMRAM
         tsx                     ; save stack pointer

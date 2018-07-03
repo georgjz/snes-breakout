@@ -21,6 +21,7 @@
 ;-------------------------------------------------------------------------------
 .include "SNESRegisters.inc"
 .include "NekoLib.inc"
+.include "GameConstants.inc"
 .include "GfxData.inc"
 .include "MemoryMap.inc"
 .include "ObjStruct.inc"
@@ -142,10 +143,15 @@
 .proc   InitVariables
         PreserveRegisters       ; preserve working registers
 
+        ; symbols used for the start position of paddle and ball used to reset
+        ; them before each level
+        ; PaddleStartHPos = $6c
+        ; PaddleStartVPos = $d0
+
         ; set inital paddle data
-        lda #$70                ; set horizontal position
+        lda #PADDLE_START_HPOS  ; set horizontal position
         sta Paddle+ObjData::HPos
-        lda #$c8                ; set vertical position
+        lda #PADDLE_START_VPOS  ; set vertical position
         sta Paddle+ObjData::VPos
         lda #$02                ; set horizontal speed
         sta Paddle+ObjData::HSpeed
@@ -155,15 +161,31 @@
         sta Paddle+ObjData::HSize
         lda #$08                ; set vertical size
         sta Paddle+ObjData::VSize
-        SetA16
-        ldx #$150
-        lda Paddle+ObjData::HPos
-        sta OAMBuffer, X        ; store position data in OAM buffer
-        inx
-        inx
-        lda #$3e40
-        sta OAMBuffer, X        ; store OAM attribute data
-        SetA8
+
+        ; set inital data for ball
+        lda # (PADDLE_START_HPOS + $10) ; set horizontal position
+        sta Ball+ObjData::HPos
+        lda # (PADDLE_START_VPOS - $08) ; set vertical position
+        sta Ball+ObjData::VPos
+        lda #$02                ; set horizontal speed
+        sta Ball+ObjData::HSpeed
+        lda #$00                ; set vertical speed
+        sta Ball+ObjData::VSpeed
+        lda #$28                ; set horizontal size
+        sta Ball+ObjData::HSize
+        lda #$08                ; set vertical size
+        sta Ball+ObjData::VSize
+
+        ; set OAM data for paddle
+        ; SetA16
+        ; ldx #$150
+        ; lda Paddle+ObjData::HPos
+        ; sta OAMBuffer, X        ; store position data in OAM buffer
+        ; inx
+        ; inx
+        ; lda #$3e40
+        ; sta OAMBuffer, X        ; store OAM attribute data
+        ; SetA8
 
         ; initialize background offsets to zero/$00
         ldx #$00
