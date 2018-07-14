@@ -305,6 +305,19 @@ UpdatePaddleOAM:
         sta OAMBuffer + $04, X  ; store positions for second sprite
 PaddleDone:
 
+        ; check if A button was pressed, then unstick ball from paddle
+        ; TODO: replace lda/sta of BallSticky with tsb/tsb
+        SetA16
+        lda Joy1Trig            ; load buttons pressed last frame...
+        ora Joy1Held            ; ...and combine with buttons held
+        and #MASK_BUTTON_A      ; check if A button was pressed/held
+        SetA8
+        tay                     ; check whether A is zero
+        beq :+                  ; if so, skip
+        lda #$00                ; else, unstick ball from paddle
+        sta BallSticky
+:
+
         ; if ball is sticky, update horizontal ball position
         lda BallSticky
         beq UpdateBall          ; if ball is not sticky, skip
@@ -336,6 +349,9 @@ UpdateBall:
         clc                         ; add vertical speed
         adc Ball+ObjData::VSpeed
         sta NewVPos                 ; save new vertical position on stack
+
+        ; check ball-wall collision
+
         ;++++++++++++++++++++++++++++++++++++++++++++++++
 ;         ; check if ball collides with paddle
 ;         ; check horizontal collision axis
