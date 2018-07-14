@@ -167,16 +167,17 @@
         sta Ball+ObjData::HPos
         lda # (PADDLE_START_VPOS - $08) ; set vertical position
         sta Ball+ObjData::VPos
-        lda #$02                ; set horizontal speed
+        lda #$00                ; set horizontal speed
         sta Ball+ObjData::HSpeed
         lda #$00                ; set vertical speed
         sta Ball+ObjData::VSpeed
-        lda #$28                ; set horizontal size
+        lda #$08                ; set horizontal size
         sta Ball+ObjData::HSize
         lda #$08                ; set vertical size
         sta Ball+ObjData::VSize
 
-        ; set OAM data for paddle
+        ; set OAM data for paddle and ball
+        ; lda OAMBuffer + HMSB_OAM_OFFSET + $14
         ; SetA16
         ; ldx #$150
         ; lda Paddle+ObjData::HPos
@@ -226,10 +227,10 @@ loop1:  sta OAMBuffer, x
         bne loop1
 
         ldx #$0000
-        lda #$ff                ; set horizontol position MSB to 1 to move all sprites offscreen
+        lda #$ff                ; set horizontal position MSB to 1 to move all sprites offscreen
 loop2:  sta OAMBuffer + $200, x
         inx
-        cpx #$1d
+        cpx #$20
         bne loop2
 
         RestoreRegisters        ; restore working registers

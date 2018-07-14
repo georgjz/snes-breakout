@@ -28,7 +28,8 @@ LOWER_BOUNDRY       = $e0
 LEFT_BOUNDRY        = $10
 RIGHT_BOUNDRY       = $ef
 PADDLE_OAM_OFFSET   = $150
-BALL_OAM_OFFSET     = $154
+BALL_OAM_OFFSET     = $158
+HMSB_OAM_OFFSET     = $200
 ;-------------------------------------------------------------------------------
 
 .endif  ; GACONSTANTS_INC

@@ -404,6 +404,13 @@ PaddleDone:
 
 
 UpdateBallOAM:
+        SetA16
+        lda NewHPos             ; get new position from stack
+        sta Ball+ObjData::HPos  ; save new position
+        ldx #BALL_OAM_OFFSET    ; get ball of set into OAM buffer
+        sta OAMBuffer, X        ; update ball OAM buffer data
+        SetA8
+
 
 
 PaddleCollisionDone:
@@ -495,7 +502,18 @@ PaddleCollisionDone:
         SetA8
 
         ; reset ball
-
+        lda # (PADDLE_START_HPOS + $10) ; inital horizontal ball position
+        sta Ball+ObjData::HPos
+        lda # (PADDLE_START_VPOS - $08) ; inital vertical ball position
+        sta Ball+ObjData::VPos
+        ; reset ball OAM
+        SetA16
+        ldx #BALL_OAM_OFFSET    ; use X as offset into OAM buffer
+        lda Ball+ObjData::HPos  ; get current ball position
+        sta OAMBuffer, X        ; store ball position in OAM buffer
+        lda #$3008              ; no flip, palette 0, name $08
+        sta OAMBuffer + $02, X
+        SetA8
 
         ; update OAMRAM
         tsx                     ; save stack pointer
