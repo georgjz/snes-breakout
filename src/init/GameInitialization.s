@@ -167,9 +167,9 @@
         sta Ball+ObjData::HPos
         lda # (PADDLE_START_VPOS - $08) ; set vertical position
         sta Ball+ObjData::VPos
-        lda #$02                ; set horizontal speed to 2
+        lda #INITIAL_BALL_HSPEED ; set horizontal speed to 2
         sta Ball+ObjData::HSpeed
-        lda #$fe                ; set vertical speed to -2
+        lda #INITIAL_BALL_VSPEED ; set vertical speed to -2
         sta Ball+ObjData::VSpeed
         lda #$08                ; set horizontal size
         sta Ball+ObjData::HSize

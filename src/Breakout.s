@@ -257,79 +257,79 @@ HandleMenuStateDone:
 ;   Description: Handles all the game logic while the game is running
 ;-------------------------------------------------------------------------------
 .proc   HandleRunState
-        phd                     ; save caller's D register/frame pointer on stack
-        ldx #$00                ; push two empty bytes to stack as local variables
+        phd                         ; save caller's D register/frame pointer on stack
+        ldx #$00                    ; push two empty bytes to stack as local variables
         phx
         ; local symbols for direct addressing (local) variables on stack
         NewHPos = $01
         NewVPos = $02
-        tsc                     ; move stack pointer via A...
-        tcd                     ; ...to D as subroutine's frame pointer
+        tsc                         ; move stack pointer via A...
+        tcd                         ; ...to D as subroutine's frame pointer
 
         ; update paddle
         SetA16
-        lda Joy1Trig            ; load buttons last frame...
-        ora Joy1Held            ; ...and combine with held buttons
+        lda Joy1Trig                ; load buttons last frame...
+        ora Joy1Held                ; ...and combine with held buttons
         and # (MASK_BUTTON_LEFT | MASK_BUTTON_RIGHT) ; check if right/left button pressed
         SetA8
-        tay                     ; save pressed button in Y
-        beq PaddleDone          ; if non pressed, paddle update done
-        lda Paddle+ObjData::HPos ; get current horizontal position
-        cpy #MASK_BUTTON_LEFT   ; if left button was pressed...
-        beq MoveLeft            ; ...move paddle to the left
-        clc                     ; else, add horizontal speed to current position
+        tay                         ; save pressed button in Y
+        beq PaddleDone              ; if non pressed, paddle update done
+        lda Paddle+ObjData::HPos    ; get current horizontal position
+        cpy #MASK_BUTTON_LEFT       ; if left button was pressed...
+        beq MoveLeft                ; ...move paddle to the left
+        clc                         ; else, add horizontal speed to current position
         adc Paddle+ObjData::HSpeed
-        sta NewHPos             ; save new position on stack
-        lda #RIGHT_BOUNDRY      ; get right playfield boundry
-        sec                     ; subtract paddle horizontal size
+        sta NewHPos                 ; save new position on stack
+        lda #RIGHT_BOUNDRY          ; get right playfield boundry
+        sec                         ; subtract paddle horizontal size
         sbc Paddle+ObjData::HSize
-        cmp NewHPos             ; compare to new position on stack
-        bcs UpdatePaddleOAM     ; if new paddle position is smaller than boundry - size, all good
-        sta NewHPos             ; else, overwrite new position with boundry - size
-        jmp UpdatePaddleOAM     ; and jump to next step
+        cmp NewHPos                 ; compare to new position on stack
+        bcs UpdatePaddleOAM         ; if new paddle position is smaller than boundry - size, all good
+        sta NewHPos                 ; else, overwrite new position with boundry - size
+        jmp UpdatePaddleOAM         ; and jump to next step
 MoveLeft:
-        sec                     ; subract paddle horizontal speed
+        sec                         ; subract paddle horizontal speed
         sbc Paddle+ObjData::HSpeed
-        sta NewHPos             ; push new position to stack
-        lda #LEFT_BOUNDRY       ; get left playfield boundry
-        cmp NewHPos             ; compare to new position
-        bcc UpdatePaddleOAM     ; if left boundry smaller than new position, all good
-        sta NewHPos             ; else, overwrite new horizontal position with left boundry
+        sta NewHPos                 ; push new position to stack
+        lda #LEFT_BOUNDRY           ; get left playfield boundry
+        cmp NewHPos                 ; compare to new position
+        bcc UpdatePaddleOAM         ; if left boundry smaller than new position, all good
+        sta NewHPos                 ; else, overwrite new horizontal position with left boundry
 UpdatePaddleOAM:
-        lda NewHPos             ; pull new horizontal position from stack
-        sta Paddle+ObjData::HPos ; store new horizontal position
-        ldx #PADDLE_OAM_OFFSET  ; use X as offset into OAM buffer
-        sta OAMBuffer, X        ; store new paddle positions on OAM buffer
-        clc                     ; add 32/$20 for second sprite
+        lda NewHPos                 ; pull new horizontal position from stack
+        sta Paddle+ObjData::HPos    ; store new horizontal position
+        ldx #PADDLE_OAM_OFFSET      ; use X as offset into OAM buffer
+        sta OAMBuffer, X            ; store new paddle positions on OAM buffer
+        clc                         ; add 32/$20 for second sprite
         adc #$20
-        sta OAMBuffer + $04, X  ; store positions for second sprite
+        sta OAMBuffer + $04, X      ; store positions for second sprite
 PaddleDone:
 
         ; check if A button was pressed, then unstick ball from paddle
         ; TODO: replace lda/sta of BallSticky with tsb/tsb
         SetA16
-        lda Joy1Trig            ; load buttons pressed last frame...
-        ora Joy1Held            ; ...and combine with buttons held
-        and #MASK_BUTTON_A      ; check if A button was pressed/held
+        lda Joy1Trig                ; load buttons pressed last frame...
+        ora Joy1Held                ; ...and combine with buttons held
+        and #MASK_BUTTON_A          ; check if A button was pressed/held
         SetA8
-        tay                     ; check whether A is zero
-        beq :+                  ; if so, skip
-        lda #$00                ; else, unstick ball from paddle
+        tay                         ; check whether A is zero
+        beq :+                      ; if so, skip
+        lda #$00                    ; else, unstick ball from paddle
         sta BallSticky
 :
 
         ; if ball is sticky, update horizontal ball position
         lda BallSticky
-        beq UpdateBall          ; if ball is not sticky, skip
-        lda Paddle+ObjData::HPos ; get updated horizontal paddle position
-        clc                     ; add $10 to it
+        beq UpdateBall              ; if ball is not sticky, skip
+        lda Paddle+ObjData::HPos    ; get updated horizontal paddle position
+        clc                         ; add $10 to it
         adc #$10
-        sta NewHPos             ; store new horizontal ball position
-        lda Paddle+ObjData::VPos ; get vertical paddle position
-        sec                     ; subtract ball vertical size
+        sta NewHPos                 ; store new horizontal ball position
+        lda Paddle+ObjData::VPos    ; get vertical paddle position
+        sec                         ; subtract ball vertical size
         sbc Ball+ObjData::VSize
-        sta NewVPos             ; store result as new vertical ball position
-        jmp UpdateBallOAM       ; skip collision detection and update OAM buffer
+        sta NewVPos                 ; store result as new vertical ball position
+        jmp UpdateBallOAM           ; skip collision detection and update OAM buffer
 
         ;   calculate new position
         ;   check for collision with walls
@@ -351,6 +351,62 @@ UpdateBall:
         sta NewVPos                 ; save new vertical position on stack
 
         ; check ball-wall collision
+        ; right boundry
+        lda #RIGHT_BOUNDRY          ; get right playfield boundry
+        sec                         ; subtract horizontal ball size
+        sbc Ball+ObjData::HSize
+        cmp NewHPos                 ; compare to updated horizontal position
+        bcs :+                      ; if ball is to left of right boundry - size, skip to left boundry
+        sta NewHPos                 ; else, reposition ball
+        lda #$00                    ; and invert horizontal speed by...
+        sec                         ; ...subtracting speed from zero
+        sbc Ball+ObjData::HSpeed
+        sta Ball+ObjData::HSpeed    ; store inverted speed
+        jmp UpdateBallOAM
+        ; left boundry
+:       lda #LEFT_BOUNDRY           ; get left playfield boundry
+        cmp NewHPos                 ; compare to new position
+        bcc :+                      ; if ball is to right of left boundry, skip to upper boundry
+        sta NewHPos                 ; else, reposition ball
+        lda #$00                    ; and invert horizontal speed by...
+        sec                         ; ...subtracting speed from zero
+        sbc Ball+ObjData::HSpeed
+        sta Ball+ObjData::HSpeed    ; store inverted speed
+        jmp UpdateBallOAM
+        ; upper boundry
+:       lda #UPPER_BOUNDRY          ; get upper playfield boundry
+        cmp NewVPos                 ; compare to updated vertical ball position
+        bcc :+                      ; if ball is below upper boundry, skip to lower boundry
+        sta NewVPos                 ; else, reposition ball
+        lda #$00                    ; and invert ball speed...
+        sec                         ; ...by subtracting speed from zero
+        sbc Ball+ObjData::VSpeed
+        sta Ball+ObjData::VSpeed    ; store inverted speed
+        ; lower boundry, game over
+:       lda #LOWER_BOUNDRY          ; get lower playfield boundry
+        cmp NewVPos                 ; compare to updated vertical ball position
+        bcs :+                      ; if ball is above lower boundry, skip
+        ; else, game over, fade out and return to start menu
+        jsr FadeOut                 ; fade out
+        lda # (FORCED_BLANKING_ON)  ; turn on forced blanking
+        sta INIDISP
+        stz NMITIMEN                ; turn off NMI
+        ; set background 1 to splash screen
+        lda # (SPLASH_MAP_SEG << 2 | BG1_SC_SIZE_32)
+        sta BG1SC
+        lda #$01                    ; make BG1 visible
+        sta TM
+        ; turn on forced blanking and NMI
+        lda # (FORCED_BLANKING_OFF | $00)
+        sta INIDISP
+        lda #$81
+        sta NMITIMEN
+        jsr FadeIn                  ; fade in
+        lda #GAME_STATE_MENU        ; set game state to menu
+        sta GameState
+        jmp Done                    ; exit subroutine
+:
+
 
         ;++++++++++++++++++++++++++++++++++++++++++++++++
 ;         ; check if ball collides with paddle
@@ -459,6 +515,7 @@ PaddleCollisionDone:
         ;   display level
         ;   increase level
         ;   set game state to load
+Done:
         plx                     ; kill local variables
         pld                     ; restore caller's D register/frame pointer
         rts
@@ -530,6 +587,10 @@ PaddleCollisionDone:
         sta Ball+ObjData::HPos
         lda # (PADDLE_START_VPOS - $08) ; inital vertical ball position
         sta Ball+ObjData::VPos
+        lda #INITIAL_BALL_HSPEED ; set horizontal speed to 2
+        sta Ball+ObjData::HSpeed
+        lda #INITIAL_BALL_VSPEED ; set vertical speed to -2
+        sta Ball+ObjData::VSpeed
         lda #$01                ; set ball to stick to paddle
         sta BallSticky
         ; reset ball OAM
@@ -573,7 +634,6 @@ PaddleCollisionDone:
 ;   Fade in screen
 ;-------------------------------------------------------------------------------
 .proc   FadeIn
-        ; PreserveRegisters           ; preserve working registers
         ; prepare registers for fading
         SetA8
         lda GameState               ; save current game state...
@@ -586,8 +646,8 @@ PaddleCollisionDone:
         tsx                         ; move stack pointer to X to use as offset
 FadeLoop:
         wai                         ; wait for NMI
-        inc $01, X                  ; increment screen brightness by one
-        lda $01, X                  ; load new screen brightness
+        inc a:$01, X                ; increment screen brightness by one
+        lda a:$01, X                ; load new screen brightness
         sta INIDISP                 ; set new screen brightness
         cmp #$0f                    ; check if brightness has reached max...
         bcs FadeLoopDone            ; ...then the fade is done
@@ -597,7 +657,6 @@ FadeLoopDone:
         pla                         ; pull old game state...
         sta GameState               ; ...and restore it
 
-        ; RestoreRegisters            ; restore working registers
         rts
 .endproc
 ;-------------------------------------------------------------------------------
@@ -606,7 +665,6 @@ FadeLoopDone:
 ;   Fade out screen
 ;-------------------------------------------------------------------------------
 .proc   FadeOut
-        ; PreserveRegisters           ; preserve working registers
         ; prepare registers for fading
         SetA8
         lda GameState               ; save current game state...
@@ -619,8 +677,8 @@ FadeLoopDone:
         tsx                         ; move stack pointer to X to use as offset
 FadeLoop:
         wai                         ; wait for NMI
-        dec $01, X                  ; decrement screen brightness by one
-        lda $01, X                  ; load new screen brightness
+        dec a:$01, X                ; decrement screen brightness by one
+        lda a:$01, X                ; load new screen brightness
         sta INIDISP                 ; set new screen brightness
         cmp #$00                    ; check if brightness has reached zero...
         bcs FadeLoopDone            ; ...then the fade is done
@@ -630,7 +688,6 @@ FadeLoopDone:
         pla                         ; pull old game state...
         sta GameState               ; ...and restore it
 
-        ; RestoreRegisters            ; restore working registers
         rts
 .endproc
 ;-------------------------------------------------------------------------------

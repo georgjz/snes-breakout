@@ -23,6 +23,8 @@
 ;-------------------------------------------------------------------------------
 PADDLE_START_HPOS   = $6c
 PADDLE_START_VPOS   = $d0
+INITIAL_BALL_HSPEED = $02
+INITIAL_BALL_VSPEED = $fe
 UPPER_BOUNDRY       = $10
 LOWER_BOUNDRY       = $e0
 LEFT_BOUNDRY        = $10
