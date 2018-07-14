@@ -396,6 +396,7 @@ UpdateBall:
         sta BG1SC
         lda #$01                    ; make BG1 visible
         sta TM
+        stz LevelToLoad             ; reset level to load to zero
         ; turn on forced blanking and NMI
         lda # (FORCED_BLANKING_OFF | $00)
         sta INIDISP
@@ -408,11 +409,10 @@ UpdateBall:
 :
 
 
-        ;++++++++++++++++++++++++++++++++++++++++++++++++
-;         ; check if ball collides with paddle
-;         ; check horizontal collision axis
-;         ; check if ball's right edge is to the right of paddle's left edge
-;         ; lda BallHPos, S             ; get new position
+        ; check if ball collides with paddle
+        ; check horizontal collision axis
+        ; check if ball's right edge is to the right of paddle's left edge
+        ; lda BallHPos, S             ; get new position
 ;         lda BallHPos                ; get new position
 ;         clc                         ; add horizontal size of ball
 ;         adc Ball+ObjData::HSize
