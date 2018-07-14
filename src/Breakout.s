@@ -257,8 +257,15 @@ HandleMenuStateDone:
 ;   Description: Handles all the game logic while the game is running
 ;-------------------------------------------------------------------------------
 .proc   HandleRunState
-        ; TODO: Replace stack relative operations with frame pointer/direct addressing
-        ; phd                         ; save current D on stack
+        phd                     ; save caller's D register/frame pointer on stack
+        ldx #$00                ; push two empty bytes to stack as local variables
+        phx
+        ; local symbols for direct addressing (local) variables on stack
+        NewHPos = $01
+        NewVPos = $02
+        tsc                     ; move stack pointer via A...
+        tcd                     ; ...to D as subroutine's frame pointer
+
         ; update paddle
         SetA16
         lda Joy1Trig            ; load buttons last frame...
@@ -272,24 +279,24 @@ HandleMenuStateDone:
         beq MoveLeft            ; ...move paddle to the left
         clc                     ; else, add horizontal speed to current position
         adc Paddle+ObjData::HSpeed
-        pha                     ; save new position on stack
+        sta NewHPos             ; save new position on stack
         lda #RIGHT_BOUNDRY      ; get right playfield boundry
         sec                     ; subtract paddle horizontal size
         sbc Paddle+ObjData::HSize
-        cmp $01, S              ; compare to new position on stack
+        cmp NewHPos             ; compare to new position on stack
         bcs UpdatePaddleOAM     ; if new paddle position is smaller than boundry - size, all good
-        sta $01, S              ; else, overwrite new position with boundry - size
+        sta NewHPos             ; else, overwrite new position with boundry - size
         jmp UpdatePaddleOAM     ; and jump to next step
 MoveLeft:
         sec                     ; subract paddle horizontal speed
         sbc Paddle+ObjData::HSpeed
-        pha                     ; push new position to stack
+        sta NewHPos             ; push new position to stack
         lda #LEFT_BOUNDRY       ; get left playfield boundry
-        cmp $01, S              ; compare to new position
+        cmp NewHPos             ; compare to new position
         bcc UpdatePaddleOAM     ; if left boundry smaller than new position, all good
-        sta $01, S              ; else, overwrite new horizontal position with left boundry
+        sta NewHPos             ; else, overwrite new horizontal position with left boundry
 UpdatePaddleOAM:
-        pla                     ; pull new horizontal position from stack
+        lda NewHPos             ; pull new horizontal position from stack
         sta Paddle+ObjData::HPos ; store new horizontal position
         ldx #PADDLE_OAM_OFFSET  ; use X as offset into OAM buffer
         sta OAMBuffer, X        ; store new paddle positions on OAM buffer
@@ -307,95 +314,97 @@ PaddleDone:
         ; update ball
         ;
         ; calculate new position and save on stack
-        lda Ball+ObjData::VPos      ; get current vertical position
-        clc                         ; add vertical speed
-        adc Ball+ObjData::VSpeed
-        pha                         ; save new vertical position on stack
         lda Ball+ObjData::HPos      ; get current horizontal position
         clc                         ; add horizontal speed
         adc Ball+ObjData::HSpeed
-        pha                         ; save new horizontal position on stack
+        sta NewHPos                 ; save new horizontal position on stack
+        lda Ball+ObjData::VPos      ; get current vertical position
+        clc                         ; add vertical speed
+        adc Ball+ObjData::VSpeed
+        sta NewVPos                 ; save new vertical position on stack
         ; create a frame pointer for direct addressing on stack
-        tsc                         ; move stack pointer via A...
-        tcd                         ; ...to D
-        ; constants used for more verbose code in direct addressing
-        BallHPos = $01
-        BallVPos = $02
-        ; check if ball collides with paddle
-        ; check horizontal collision axis
-        ; check if ball's right edge is to the right of paddle's left edge
-        ; lda BallHPos, S             ; get new position
-        lda BallHPos                ; get new position
-        clc                         ; add horizontal size of ball
-        adc Ball+ObjData::HSize
-        cmp Paddle+ObjData::HPos
-        bcc PaddleCollisionDone     ; if not, no collision
-        ; check if ball's left edge is to the right of paddle's left edge
-        lda Paddle+ObjData::HPos    ; get current horizontal position of paddle
-        clc                         ; add horizontal paddle size
-        adc Paddle+ObjData::HSize
-        ; cmp BallHPos, S             ; compare to the new horizontal position/left edge of ball
-        cmp BallHPos                ; compare to the new horizontal position/left edge of ball
-        bcc PaddleCollisionDone     ; if not, no collision
-        ; check vertical collision axis
-        ; check if ball's lower edge is below paddle's upper edge
-        ; lda BallVPos, S             ; get new vertical position of ball
-        lda BallVPos                ; get new vertical position of ball
-        clc                         ; add verticall ball size
-        adc Ball+ObjData::VSize
-        cmp Paddle+ObjData::VPos
-        bcc PaddleCollisionDone     ; if not, no collision
-        ; check if paddle's lower edge is above ball's upper edge
-        lda Paddle+ObjData::VPos    ; get vertical position of paddle
-        clc                         ; add vertical size of paddle
-        adc Paddle+ObjData::VSize
-        ; cmp BallVPos, S             ; compare to new vertical position of ball
-        cmp BallVPos                ; compare to new vertical position of ball
-        bcc PaddleCollisionDone     ; if not, no collision
-        ; handle collision between ball and paddle
-        ; check wether ball midpoint is above paddle
-        ; lda BallHPos, S             ; get new horizontal ball position
-        lda BallHPos                ; get new horizontal ball position
-        clc                         ; add $04 to get ball midpoint
-        adc #$04
-        sec                         ; subtract horizontal paddle position
-        sbc Paddle+ObjData::HPos
-        cmp #$00
-        bcc PaddleEdgeCollision     ; if ball midpoint is not to right of paddle's left edge, then edge collision occured
-        cmp Paddle+ObjData::HSize   ; if ball midpoint is above or left of paddle'es right edge...
-        bcs PaddleEdgeCollision     ; then edge collision occured
-        ; simple collision with paddle, so reposition ball above paddle and invert vertical speed
-        lda Paddle+ObjData::VPos    ; get vertical position of paddle
-        sec                         ; subtract ball size
-        sbc Ball+ObjData::VSize
-        ; sta BallVPos, S             ; update new vertical ball position
-        sta BallVPos                ; update new vertical ball position
-        lda #$00                    ; reset A to store inverted VSpeed
-        sec                         ; 0 - VSpeed = -VSpeed
-        sbc Ball+ObjData::VSpeed
-        sta Ball+ObjData::VSpeed
-        jmp UpdateBallOAM           ; jump to update the OAM buffer
-PaddleEdgeCollision:
-        ; calculate delta H and delta V
-        ; lda BallHPos, S             ; get the new horizontal position
-        lda BallHPos                ; get the new horizontal position
-        sec                         ; subtract horizontal paddle position
-        sbc Paddle+ObjData::HPos
-        tax                         ; save delta H in X
-        ; lda BallVPos, S             ; get new vertical position
-        lda BallVPos                ; get new vertical position
-        sec                         ; subract vertical paddle position
-        sbc Paddle+ObjData::VPos
-        pha                         ; push delta V to stack
-        txa                         ; move delta H back to A
-        sec                         ; prepare carry for SBC
-        sbc $01, S                  ; delta H - delta V
-        bvc :+                      ; if V clear, then N = N xor 1, else V xor N = N xor 1
-        eor #$8000                  ; calculate N xor V
-:       bpl :+                      ; if delta H >= delta V, skip
+        ; tsc                         ; move stack pointer via A...
+        ; tcd                         ; ...to D
+        ; ; constants used for more verbose code in direct addressing
+        ; BallVPos = $01
+        ; BallHPos = $02
+        ;++++++++++++++++++++++++++++++++++++++++++++++++
+;         ; check if ball collides with paddle
+;         ; check horizontal collision axis
+;         ; check if ball's right edge is to the right of paddle's left edge
+;         ; lda BallHPos, S             ; get new position
+;         lda BallHPos                ; get new position
+;         clc                         ; add horizontal size of ball
+;         adc Ball+ObjData::HSize
+;         cmp Paddle+ObjData::HPos
+;         bcc PaddleCollisionDone     ; if not, no collision
+;         ; check if ball's left edge is to the right of paddle's left edge
+;         lda Paddle+ObjData::HPos    ; get current horizontal position of paddle
+;         clc                         ; add horizontal paddle size
+;         adc Paddle+ObjData::HSize
+;         ; cmp BallHPos, S             ; compare to the new horizontal position/left edge of ball
+;         cmp BallHPos                ; compare to the new horizontal position/left edge of ball
+;         bcc PaddleCollisionDone     ; if not, no collision
+;         ; check vertical collision axis
+;         ; check if ball's lower edge is below paddle's upper edge
+;         ; lda BallVPos, S             ; get new vertical position of ball
+;         lda BallVPos                ; get new vertical position of ball
+;         clc                         ; add verticall ball size
+;         adc Ball+ObjData::VSize
+;         cmp Paddle+ObjData::VPos
+;         bcc PaddleCollisionDone     ; if not, no collision
+;         ; check if paddle's lower edge is above ball's upper edge
+;         lda Paddle+ObjData::VPos    ; get vertical position of paddle
+;         clc                         ; add vertical size of paddle
+;         adc Paddle+ObjData::VSize
+;         ; cmp BallVPos, S             ; compare to new vertical position of ball
+;         cmp BallVPos                ; compare to new vertical position of ball
+;         bcc PaddleCollisionDone     ; if not, no collision
+;         ; handle collision between ball and paddle
+;         ; check wether ball midpoint is above paddle
+;         ; lda BallHPos, S             ; get new horizontal ball position
+;         lda BallHPos                ; get new horizontal ball position
+;         clc                         ; add $04 to get ball midpoint
+;         adc #$04
+;         sec                         ; subtract horizontal paddle position
+;         sbc Paddle+ObjData::HPos
+;         cmp #$00
+;         bcc PaddleEdgeCollision     ; if ball midpoint is not to right of paddle's left edge, then edge collision occured
+;         cmp Paddle+ObjData::HSize   ; if ball midpoint is above or left of paddle'es right edge...
+;         bcs PaddleEdgeCollision     ; then edge collision occured
+;         ; simple collision with paddle, so reposition ball above paddle and invert vertical speed
+;         lda Paddle+ObjData::VPos    ; get vertical position of paddle
+;         sec                         ; subtract ball size
+;         sbc Ball+ObjData::VSize
+;         ; sta BallVPos, S             ; update new vertical ball position
+;         sta BallVPos                ; update new vertical ball position
+;         lda #$00                    ; reset A to store inverted VSpeed
+;         sec                         ; 0 - VSpeed = -VSpeed
+;         sbc Ball+ObjData::VSpeed
+;         sta Ball+ObjData::VSpeed
+;         jmp UpdateBallOAM           ; jump to update the OAM buffer
+; PaddleEdgeCollision:
+;         ; calculate delta H and delta V
+;         ; lda BallHPos, S             ; get the new horizontal position
+;         lda BallHPos                ; get the new horizontal position
+;         sec                         ; subtract horizontal paddle position
+;         sbc Paddle+ObjData::HPos
+;         tax                         ; save delta H in X
+;         ; lda BallVPos, S             ; get new vertical position
+;         lda BallVPos                ; get new vertical position
+;         sec                         ; subract vertical paddle position
+;         sbc Paddle+ObjData::VPos
+;         pha                         ; push delta V to stack
+;         txa                         ; move delta H back to A
+;         sec                         ; prepare carry for SBC
+;         sbc $01, S                  ; delta H - delta V
+;         bvc :+                      ; if V clear, then N = N xor 1, else V xor N = N xor 1
+;         eor #$8000                  ; calculate N xor V
+; :       bpl :+                      ; if delta H >= delta V, skip
 
 
 UpdateBallOAM:
+
 
 PaddleCollisionDone:
 
@@ -419,6 +428,8 @@ PaddleCollisionDone:
         ;   display level
         ;   increase level
         ;   set game state to load
+        plx                     ; kill local variables
+        pld                     ; restore caller's D register/frame pointer
         rts
 .endproc
 ;-------------------------------------------------------------------------------
