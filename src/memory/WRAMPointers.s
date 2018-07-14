@@ -35,6 +35,7 @@
 .export     OAMBuffer           ; Pointer to OAM Buffer in WRAM
 .export     GameState           ; Holds the current game state
 .export     LevelToLoad         ; Holds the next level that should be loaded
+.export     BallSticky          ; Holds wether the ball is sticked to the paddle
 .export     Ball                ; Holds the data of the ball
 .export     Paddle              ; Holds the data of the paddle
 .export     BG1HOffset          ; Background 1 horizontal offset
@@ -74,6 +75,7 @@
     OAMBuffer:          .res    544
     GameState:          .res    1
     LevelToLoad:        .res    1
+    BallSticky:         .res    1
     Ball:               .tag    ObjData
     Paddle:             .tag    ObjData
 ;-------------------------------------------------------------------------------

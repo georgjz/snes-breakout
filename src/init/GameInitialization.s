@@ -175,6 +175,8 @@
         sta Ball+ObjData::HSize
         lda #$08                ; set vertical size
         sta Ball+ObjData::VSize
+        lda #$01                ; set the ball to sticky
+        sta BallSticky
 
         ; set OAM data for paddle and ball
         ; lda OAMBuffer + HMSB_OAM_OFFSET + $14

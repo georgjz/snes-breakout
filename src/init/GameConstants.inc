@@ -23,10 +23,10 @@
 ;-------------------------------------------------------------------------------
 PADDLE_START_HPOS   = $6c
 PADDLE_START_VPOS   = $d0
-UPPER_BOUNDRY       = $11
+UPPER_BOUNDRY       = $10
 LOWER_BOUNDRY       = $e0
 LEFT_BOUNDRY        = $10
-RIGHT_BOUNDRY       = $ef
+RIGHT_BOUNDRY       = $f0
 PADDLE_OAM_OFFSET   = $150
 BALL_OAM_OFFSET     = $158
 HMSB_OAM_OFFSET     = $200

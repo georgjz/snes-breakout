@@ -305,6 +305,19 @@ UpdatePaddleOAM:
         sta OAMBuffer + $04, X  ; store positions for second sprite
 PaddleDone:
 
+        ; if ball is sticky, update horizontal ball position
+        lda BallSticky
+        beq UpdateBall          ; if ball is not sticky, skip
+        lda Paddle+ObjData::HPos ; get updated horizontal paddle position
+        clc                     ; add $10 to it
+        adc #$10
+        sta NewHPos             ; store new horizontal ball position
+        lda Paddle+ObjData::VPos ; get vertical paddle position
+        sec                     ; subtract ball vertical size
+        sbc Ball+ObjData::VSize
+        sta NewVPos             ; store result as new vertical ball position
+        jmp UpdateBallOAM       ; skip collision detection and update OAM buffer
+
         ;   calculate new position
         ;   check for collision with walls
         ;   if collision
@@ -313,6 +326,7 @@ PaddleDone:
 
         ; update ball
         ;
+UpdateBall:
         ; calculate new position and save on stack
         lda Ball+ObjData::HPos      ; get current horizontal position
         clc                         ; add horizontal speed
@@ -322,12 +336,6 @@ PaddleDone:
         clc                         ; add vertical speed
         adc Ball+ObjData::VSpeed
         sta NewVPos                 ; save new vertical position on stack
-        ; create a frame pointer for direct addressing on stack
-        ; tsc                         ; move stack pointer via A...
-        ; tcd                         ; ...to D
-        ; ; constants used for more verbose code in direct addressing
-        ; BallVPos = $01
-        ; BallHPos = $02
         ;++++++++++++++++++++++++++++++++++++++++++++++++
 ;         ; check if ball collides with paddle
 ;         ; check horizontal collision axis
@@ -506,6 +514,8 @@ PaddleCollisionDone:
         sta Ball+ObjData::HPos
         lda # (PADDLE_START_VPOS - $08) ; inital vertical ball position
         sta Ball+ObjData::VPos
+        lda #$01                ; set ball to stick to paddle
+        sta BallSticky
         ; reset ball OAM
         SetA16
         ldx #BALL_OAM_OFFSET    ; use X as offset into OAM buffer
