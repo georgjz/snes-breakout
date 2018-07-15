@@ -317,7 +317,6 @@ PaddleDone:
         lda #$00                    ; else, unstick ball from paddle
         sta BallSticky
 :
-
         ; if ball is sticky, update horizontal ball position
         lda BallSticky
         beq UpdateBall              ; if ball is not sticky, skip
@@ -338,7 +337,6 @@ PaddleDone:
         ; update paddle OAM
 
         ; update ball
-        ;
 UpdateBall:
         ; calculate new position and save on stack
         lda Ball+ObjData::HPos      ; get current horizontal position
@@ -408,79 +406,129 @@ UpdateBall:
         jmp Done                    ; exit subroutine
 :
 
-
         ; check if ball collides with paddle
         ; check horizontal collision axis
         ; check if ball's right edge is to the right of paddle's left edge
-        ; lda BallHPos, S             ; get new position
-;         lda BallHPos                ; get new position
-;         clc                         ; add horizontal size of ball
-;         adc Ball+ObjData::HSize
-;         cmp Paddle+ObjData::HPos
-;         bcc PaddleCollisionDone     ; if not, no collision
-;         ; check if ball's left edge is to the right of paddle's left edge
-;         lda Paddle+ObjData::HPos    ; get current horizontal position of paddle
-;         clc                         ; add horizontal paddle size
-;         adc Paddle+ObjData::HSize
-;         ; cmp BallHPos, S             ; compare to the new horizontal position/left edge of ball
-;         cmp BallHPos                ; compare to the new horizontal position/left edge of ball
-;         bcc PaddleCollisionDone     ; if not, no collision
-;         ; check vertical collision axis
-;         ; check if ball's lower edge is below paddle's upper edge
-;         ; lda BallVPos, S             ; get new vertical position of ball
-;         lda BallVPos                ; get new vertical position of ball
-;         clc                         ; add verticall ball size
-;         adc Ball+ObjData::VSize
-;         cmp Paddle+ObjData::VPos
-;         bcc PaddleCollisionDone     ; if not, no collision
-;         ; check if paddle's lower edge is above ball's upper edge
-;         lda Paddle+ObjData::VPos    ; get vertical position of paddle
-;         clc                         ; add vertical size of paddle
-;         adc Paddle+ObjData::VSize
-;         ; cmp BallVPos, S             ; compare to new vertical position of ball
-;         cmp BallVPos                ; compare to new vertical position of ball
-;         bcc PaddleCollisionDone     ; if not, no collision
-;         ; handle collision between ball and paddle
-;         ; check wether ball midpoint is above paddle
-;         ; lda BallHPos, S             ; get new horizontal ball position
-;         lda BallHPos                ; get new horizontal ball position
-;         clc                         ; add $04 to get ball midpoint
-;         adc #$04
-;         sec                         ; subtract horizontal paddle position
-;         sbc Paddle+ObjData::HPos
-;         cmp #$00
-;         bcc PaddleEdgeCollision     ; if ball midpoint is not to right of paddle's left edge, then edge collision occured
-;         cmp Paddle+ObjData::HSize   ; if ball midpoint is above or left of paddle'es right edge...
-;         bcs PaddleEdgeCollision     ; then edge collision occured
-;         ; simple collision with paddle, so reposition ball above paddle and invert vertical speed
-;         lda Paddle+ObjData::VPos    ; get vertical position of paddle
-;         sec                         ; subtract ball size
-;         sbc Ball+ObjData::VSize
-;         ; sta BallVPos, S             ; update new vertical ball position
-;         sta BallVPos                ; update new vertical ball position
-;         lda #$00                    ; reset A to store inverted VSpeed
-;         sec                         ; 0 - VSpeed = -VSpeed
-;         sbc Ball+ObjData::VSpeed
-;         sta Ball+ObjData::VSpeed
-;         jmp UpdateBallOAM           ; jump to update the OAM buffer
-; PaddleEdgeCollision:
-;         ; calculate delta H and delta V
-;         ; lda BallHPos, S             ; get the new horizontal position
-;         lda BallHPos                ; get the new horizontal position
-;         sec                         ; subtract horizontal paddle position
-;         sbc Paddle+ObjData::HPos
-;         tax                         ; save delta H in X
-;         ; lda BallVPos, S             ; get new vertical position
-;         lda BallVPos                ; get new vertical position
-;         sec                         ; subract vertical paddle position
-;         sbc Paddle+ObjData::VPos
-;         pha                         ; push delta V to stack
-;         txa                         ; move delta H back to A
-;         sec                         ; prepare carry for SBC
-;         sbc $01, S                  ; delta H - delta V
-;         bvc :+                      ; if V clear, then N = N xor 1, else V xor N = N xor 1
-;         eor #$8000                  ; calculate N xor V
-; :       bpl :+                      ; if delta H >= delta V, skip
+        lda NewHPos                 ; get new position
+        clc                         ; add horizontal size of ball
+        adc Ball+ObjData::HSize
+        cmp Paddle+ObjData::HPos
+        ; TODO: reduce code size
+        ; bcc PaddleCollisionDone     ; if not, no collision
+        bcs :+
+        jmp PaddleCollisionDone
+        ; TODO ==================
+        ; check if ball's left edge is to the right of paddle's left edge
+:       lda Paddle+ObjData::HPos    ; get current horizontal position of paddle
+        clc                         ; add horizontal paddle size
+        adc Paddle+ObjData::HSize
+        cmp NewHPos                 ; compare to the new horizontal position/left edge of ball
+        bcs :+
+        jmp PaddleCollisionDone
+        ; bcc PaddleCollisionDone      ; if not, no collision
+        ; check vertical collision axis
+        ; check if ball's lower edge is below paddle's upper edge
+:       lda NewVPos                 ; get new vertical position of ball
+        clc                         ; add verticall ball size
+        adc Ball+ObjData::VSize
+        cmp Paddle+ObjData::VPos
+        bcc PaddleCollisionDone     ; if not, no collision
+        ; check if paddle's lower edge is above ball's upper edge
+        lda Paddle+ObjData::VPos    ; get vertical position of paddle
+        clc                         ; add vertical size of paddle
+        adc Paddle+ObjData::VSize
+        cmp NewVPos                 ; compare to new vertical position of ball
+        bcc PaddleCollisionDone     ; if not, no collision
+
+        ; handle collision between ball and paddle
+        ; check wether ball midpoint is above paddle
+        ; TODO: Remove static data
+        lda NewHPos                 ; get new horizontal ball position
+        clc                         ; add $04 to get ball midpoint
+        adc #$04
+        sec                         ; subtract horizontal paddle position
+        sbc Paddle+ObjData::HPos
+        cmp #$00
+        bcc PaddleEdgeCollision     ; if ball midpoint is not to right of paddle's left edge, then edge collision occured
+        cmp Paddle+ObjData::HSize   ; if ball midpoint is above or left of paddle'es right edge...
+        bcs PaddleEdgeCollision     ; then edge collision occured
+        ; simple collision with paddle, so reposition ball above paddle and invert vertical speed
+        lda Paddle+ObjData::VPos    ; get vertical position of paddle
+        sec                         ; subtract ball size
+        sbc Ball+ObjData::VSize
+        sta NewVPos                 ; update new vertical ball position
+        lda #$00                    ; reset A to store inverted VSpeed
+        sec                         ; 0 - VSpeed = -VSpeed
+        sbc Ball+ObjData::VSpeed
+        sta Ball+ObjData::VSpeed
+        jmp UpdateBallOAM           ; jump to update the OAM buffer
+
+PaddleEdgeCollision:
+        DeltaH = $01
+        DeltaV = $02
+        ; calculate delta V and store on stack
+        lda NewVPos
+        sec
+        sbc Paddle+ObjData::VPos
+        bpl :+                      ; if result positive, skip
+        eor #$ff                    ; else, invert
+        clc
+        adc #$01
+:       pha
+        ; calculate delta H and store on stack
+        lda NewHPos
+        sec
+        sbc Paddle+ObjData::HPos
+        bpl :+
+        eor #$ff
+        clc
+        adc #$01
+:       pha
+        lda NewHPos
+        cmp Paddle+ObjData::HPos
+        bcc :+
+        pla
+        clc
+        adc Paddle+ObjData::HSize
+        pha
+:
+        ; compare delta H to delta V
+        lda DeltaH, S           ; get delta H
+        sec
+        sbc DeltaV, S           ; compare to delta V
+        bvc :+                  ; if V = 0, then V xor N = N xor 1
+        eor #$ff
+:       bpl HCollision          ; if delta H >= delta V, skip
+        ; flip V
+        lda NewVPos
+        clc
+        adc #$04
+        cmp Paddle+ObjData::VPos
+        bcs :+
+        lda Paddle+ObjData::VPos
+        sec
+        sbc Ball+ObjData::VSize
+        sta NewVPos
+        jmp PaddleCollisionDone
+        ; flip V
+:       lda NewVPos
+        clc
+        adc #$04
+        cmp Paddle+ObjData::VPos
+        bcs :+
+        lda Paddle+ObjData::VPos
+        clc
+        adc Ball+ObjData::VSize
+        sta NewVPos
+        jmp PaddleCollisionDone
+
+
+
+
+HCollision:
+
+
+PaddleCollisionDone:
 
 
 UpdateBallOAM:
@@ -493,7 +541,6 @@ UpdateBallOAM:
 
 
 
-PaddleCollisionDone:
 
 
         ;   do collision checks
