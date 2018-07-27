@@ -10,21 +10,21 @@
 ; The above copyright notice and this permission notice shall be included in
 ; all copies or substantial portions of the Software.
 ; -----------------------------------------------------------------------------
-;   File: GameInitialization.inc
+;   File: GameState.inc
 ;   Author(s): Georg Ziegler
-;   Description: This a header file for GameInitialization.s, include this
-;   to use the subroutines in afore mentioned file
+;   Description: This file game state constants
 ;
 
-.ifndef GAMEINITIALIZATION_INC
-.define GAMEINITIALIZATION_INC
+.ifndef GAMESTATE_INC
+.define GAMESTATE_INC
 
 ;-------------------------------------------------------------------------------
-;   Routines found in this file
+;   Game States
 ;-------------------------------------------------------------------------------
-.import     InitGame
-.import     InitVariables
-.import     ResetOAMBuffer
+GAME_STATE_FADE     = $00       ; Game screen is fading in or out
+GAME_STATE_MENU     = $01       ; Game is displaying start menu
+GAME_STATE_RUN      = $02       ; Game is running
+GAME_STATE_LOAD     = $03       ; Game is loading a level
 ;-------------------------------------------------------------------------------
 
-.endif  ; GAMEINITIALIZATION_INC
+.endif  ; GAMESTATE_INC

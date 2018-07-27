@@ -10,21 +10,30 @@
 ; The above copyright notice and this permission notice shall be included in
 ; all copies or substantial portions of the Software.
 ; -----------------------------------------------------------------------------
-;   File: GameInitialization.inc
+;   File: MemoryMap.inc
 ;   Author(s): Georg Ziegler
-;   Description: This a header file for GameInitialization.s, include this
-;   to use the subroutines in afore mentioned file
+;   Description: This file constants to make code that transfers VRAM data more
+;   readable
 ;
 
-.ifndef GAMEINITIALIZATION_INC
-.define GAMEINITIALIZATION_INC
+.ifndef MEMORYMAP_INC
+.define MEMORYMAP_INC
 
 ;-------------------------------------------------------------------------------
-;   Routines found in this file
+;   VRAM Map
 ;-------------------------------------------------------------------------------
-.import     InitGame
-.import     InitVariables
-.import     ResetOAMBuffer
+SPRITE_DATA_SEG     = $00       ; $0000 in VRAM, address of sprite sheet
+    ; 4bpp maps
+BORDER_MAP_SEG      = $08       ; $4000 in VRAM, map for displaying the playfield border
+OPAQUE_MAP_SEG      = $09       ; $4800 in VRAM, map for a opaque screen
+SPLASH_MAP_SEG      = $0a       ; $5000 in VRAM, map for the splash screen
+TRANS_MAP_SEG       = $0b       ; $5800 in VRAM, map for a transparent screen
+    ; 2bpp maps
+START_MENU_SEG      = $0c       ; $6000 in VRAM, map for the start menu
+    ; Additional data, remove later
+BG1MAP_SEGMENT      = $20       ; $4000 in VRAM, tilemap for background 1
+BG2MAP_SEGMENT      = $24       ; $4800 in VRAM, tilemap for background 2
+BG3MAP_SEGMENT      = $28       ; $5000 in VRAM, tilemap for background 3
 ;-------------------------------------------------------------------------------
 
-.endif  ; GAMEINITIALIZATION_INC
+.endif  ; MEMORYMAP_INC

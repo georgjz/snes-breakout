@@ -21,9 +21,9 @@
 ;-------------------------------------------------------------------------------
 .include "SNESRegisters.inc"
 .include "NekoLib.inc"
-.include "WRAMPointers.inc"
 .include "BaseColors.inc"
 .include "GfxData.inc"
+.include "WRAMPointers.inc"
 ;-------------------------------------------------------------------------------
 
 ;-------------------------------------------------------------------------------
@@ -105,8 +105,9 @@ ColorLoop:
         nop                     ; ...6...
         nop                     ; ...8 cycles
         lda RDMPYL              ; get multiplication result
-        ShiftARight $05         ; divide result by $20
-        ShiftALeft $05          ; shift left 5 times
+        ; ShiftARight $05         ; divide result by $20
+        and #$03e0              ; clear lower byte of result
+        ; ShiftALeft $05          ; shift left 5 times
         ora $01, S              ; mix G and R component
         sta $01, S              ; store GR component
 
@@ -126,8 +127,9 @@ ColorLoop:
         nop                     ; ...6...
         nop                     ; ...8 cycles
         lda RDMPYL              ; get multiplication result
-        ShiftARight $05         ; divide result by $20
-        ShiftALeft $0a          ; shift left 5 times
+        ; ShiftARight $05         ; divide result by $20
+        and #$03e0              ; isolate 5-bit result
+        ShiftALeft $05          ; shift left 5 times
         ora $01, S              ; mix B, G and R component
         sta $01, S              ; store BGR555 color on stack
         ; the blended color is now stored on stack

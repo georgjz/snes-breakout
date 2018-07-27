@@ -23,9 +23,10 @@
 ;-------------------------------------------------------------------------------
 .import     SpriteSheet:    far
 .import     SpritePalette:  far
-.import     BG1Map:         far
-.import     BG2Map:         far
-.import     BG3Map:         far
+.import     GameBorderMap:  far
+.import     OpaqueMap:      far
+.import     SplashMap:      far 
+.import     StartMenuMap:   far
 ;-------------------------------------------------------------------------------
 
 .endif  ; GFXDATA_INC

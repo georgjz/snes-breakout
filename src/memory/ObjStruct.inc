@@ -10,21 +10,26 @@
 ; The above copyright notice and this permission notice shall be included in
 ; all copies or substantial portions of the Software.
 ; -----------------------------------------------------------------------------
-;   File: GameInitialization.inc
+;   File: ObjStruct.inc
 ;   Author(s): Georg Ziegler
-;   Description: This a header file for GameInitialization.s, include this
-;   to use the subroutines in afore mentioned file
+;   Description: This file contains the definition of a struct that holds the
+;   paddle and the ball
 ;
 
-.ifndef GAMEINITIALIZATION_INC
-.define GAMEINITIALIZATION_INC
+.ifndef OBJECTSTRUCT_INC
+.define OBJECTSTRUCT_INC
 
 ;-------------------------------------------------------------------------------
-;   Routines found in this file
+;   Data structure for keeping track of the state of the paddle and the ball
 ;-------------------------------------------------------------------------------
-.import     InitGame
-.import     InitVariables
-.import     ResetOAMBuffer
+.struct     ObjData
+            HPos            .byte       ; horizontal position
+            VPos            .byte       ; vertical position
+            HSpeed          .byte       ; horizontal speed
+            VSpeed          .byte       ; vertical speed
+            HSize           .byte       ; horizontal size
+            VSize           .byte       ; vertical size
+.endstruct
 ;-------------------------------------------------------------------------------
 
-.endif  ; GAMEINITIALIZATION_INC
+.endif  ; OBJECTSTRUCT_INC

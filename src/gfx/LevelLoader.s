@@ -155,12 +155,12 @@ HMSB:   sta (OAMBufferPointer, S), Y ; store bit mask in OAM buffer
         iny
         cpy # ($200 + $14)      ; update data for 80 objects
         bcc HMSB
-        lda #$55aa              ; HMSB data for objects 80 ~ 83
+        lda #$caaa              ; HMSB data for objects 80 ~ 83, paddle sprites, and ball
         sta (OAMBufferPointer, S), Y
+        SetA8                   ; set A to 8-bit
         ; loading level into OAM buffer done
 
         pld                     ; restore caller's frame pointer
-        SetA8                   ; set A to 8-bit
         RestoreRegisters        ; restore working registers
         rtl
 .endproc
