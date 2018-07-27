@@ -416,7 +416,6 @@ UpdateBall:
         ; bcc PaddleCollisionDone     ; if not, no collision
         bcs :+
         jmp PaddleCollisionDone
-        ; TODO ==================
         ; check if ball's left edge is to the right of paddle's left edge
 :       lda Paddle+ObjData::HPos    ; get current horizontal position of paddle
         clc                         ; add horizontal paddle size
@@ -431,14 +430,18 @@ UpdateBall:
         clc                         ; add verticall ball size
         adc Ball+ObjData::VSize
         cmp Paddle+ObjData::VPos
-        bcc PaddleCollisionDone     ; if not, no collision
+        ; bcc PaddleCollisionDone     ; if not, no collision
+        bcs :+
+        jmp PaddleCollisionDone
         ; check if paddle's lower edge is above ball's upper edge
-        lda Paddle+ObjData::VPos    ; get vertical position of paddle
+:       lda Paddle+ObjData::VPos    ; get vertical position of paddle
         clc                         ; add vertical size of paddle
         adc Paddle+ObjData::VSize
         cmp NewVPos                 ; compare to new vertical position of ball
-        bcc PaddleCollisionDone     ; if not, no collision
-
+        ; bcc PaddleCollisionDone     ; if not, no collision
+        bcs :+
+        jmp PaddleCollisionDone
+:
         ; handle collision between ball and paddle
         ; check whether ball midpoint is above paddle
         ; TODO: Remove static data
@@ -501,10 +504,49 @@ PaddleLeftEdgeCollision:
         ; else
         ;   NewVPos = Paddle.VPos - Ball.VSize
         ;   flip V speed
-        ;   if (H speed < 0)
+        ;   if (H speed > 0)
         ;       flip H speed
         ;
 PaddleRightEdgeCollision:
+        .byte $42, $00              ; breakpoint
+        lda NewVPos
+        clc
+        adc #$04
+        cmp Paddle+ObjData::VPos
+        bcc :+
+        lda Paddle+ObjData::HPos    ; reposition horizontally
+        clc
+        adc Paddle+ObjData::HSize
+        sta NewHPos
+        lda #$00                    ; invert horizontal speed
+        sec
+        sbc Ball+ObjData::HSpeed
+        sta Ball+ObjData::HSpeed
+        jmp UpdateBallOAM
+:       lda Paddle+ObjData::VPos    ; reposition vertically
+        sec
+        sbc Ball+ObjData::VSize
+        sta NewVPos
+        lda #$00                    ; invert vertical speed
+        sec
+        sbc Ball+ObjData::VSpeed
+        sta Ball+ObjData::VSpeed
+        lda Ball+ObjData::HSpeed
+        bpl :+                      ; if h speed is negative, skip
+        lda #$00                    ; else, invert horizontal speed
+        sec
+        sbc Ball+ObjData::HSpeed
+        sta Ball+ObjData::HSpeed
+:       jmp UpdateBallOAM
+        ; if (Ball.VPos + 4 >= Paddle.VPos)
+        ;   NewHPos = Paddle.HPos + Paddle.HSize
+        ;   flip H speed
+        ;
+        ; else
+        ;   NewVPos = Paddle.VPos - Ball.VSize
+        ;   flip V speed
+        ;   if (H speed < 0)
+        ;       flip H speed
 
 
 PaddleCollisionDone:
