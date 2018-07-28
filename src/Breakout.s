@@ -562,9 +562,11 @@ BrickLoop:
         lda OAMBuffer+2, Y      ; get brick OAM attribute bytes
         and #OAM_PRIO_BITS      ; mask prio bits
         eor #DESTROYED_BRICK    ; check if brick is already destroyed...
-        beq BrickDone           ; ...if so, go to next brick
+        ; beq BrickDone           ; ...if so, go to next brick
+        bne :+                  ; ...if so, go to next brick
+        jmp BrickDone
         ; else, conduct AABB check between ball and brick
-        tax                     ; save vertical and horizontal position in X
+:        tax                     ; save vertical and horizontal position in X
         SetA8                   ; brick horizontal position now in A, vertical in B
         ; check if ball's right edge is to the right of brick's left edge
         lda NewHPos                 ; get new position
@@ -596,52 +598,106 @@ BrickLoop:
         bcs :+
         jmp BrickDone
 :
-
         ; get direction
-
-        ; reposition ball
-
-        ; flip speed(s)
+        lda #$00                    ; clear B
+        xba
+        ; SetA8
+        lda NewHPos                 ; get horizontal ball position
+        clc
+        adc #$04
+        cmp OAMBuffer, Y
+        bcc :++                     ; if Ball.HPos + 4 < Brick.HPos, skip
+        lda #$00                    ; else, flip vertical speed
+        sec
+        sbc Ball+ObjData::VSpeed
+        sta Ball+ObjData::VSpeed
+        tax                         ; check sign of vertical speed
+        bpl :+                      ; if position, reposition down
+        lda OAMBuffer+1, Y          ; get vertical brick position
+        sec
+        sbc Ball+ObjData::VSize     ; subtract vertical ball size
+        sta NewVPos                 ; store new vertical ball position
+        jmp CheckBrickType
+:       lda OAMBuffer+1, Y
+        clc
+        adc #BRICK_VSIZE
+        sta NewVPos
+        jmp CheckBrickType
+:
+        ; flip horizontal speed
+        lda #$00
+        sec
+        sbc Ball+ObjData::HSpeed
+        sta Ball+ObjData::HSpeed
+        tax
+        bpl :+
+        lda OAMBuffer, Y
+        sec
+        sbc Ball+ObjData::HSize
+        sta NewHPos
+        jmp CheckBrickType
+:       lda OAMBuffer, Y
+        clc
+        adc #BRICK_HSIZE
+        sta NewHPos
 
         .byte $42, $00
         ; check prio
+CheckBrickType:
         SetA16
         lda OAMBuffer+2, Y          ; get OAM attribute bytes
         and #OAM_PRIO_BITS          ; mask prio bits
         eor #DESTROYABLE_BRICK      ; if it's not a destroyable brick...
-        bne :+                      ; ...skip
+        bne BrickCollisionDone      ; ...skip
+        ; else, move brick offscreen
+        tya                         ; move brick number to A
+        ShiftARight $02             ; A = brick number / 4
+        sta WRDIVL                  ; set dividend
+        lda #$04
+        sta WRDIVB                  ; set divisor
         lda OAMBuffer+2, Y
         eor #OAM_PRIO_BITS          ; invert OAM prio bits
         sta OAMBuffer+2, Y
-        ; move destroyed brick offscreen by setting HMSB bit
-        ; tya                         ; set brick number into A
-        ; ShiftARight $02             ; divide by 4
-        ; phy                         ; save brick number on stack
-        ; ShiftARight $03             ; HMSB table offset in X = Y / 8
+        nop                         ; wait additional 4 cycles
+        nop
+        ; lda RDDIVL                  ; get quotient
+        ; asl                         ; multiply by 2
+        ; tax                         ; use quotient as offset into HMSB table
+        ; calculate bitmask
+        lda RDMPYL                  ; get remainder...
+        pha                         ; ...and save on stack
+        lda #$01                    ; load bitmask
+:       plx                         ; get remainder
+        beq :+                      ; if zero, break
+        asl                         ; else, shift HMSB by 2
+        asl
+        dex
+        phx
+        jmp :-
+:
+        pha
+        lda RDDIVL
+        ; dec
+        ; asl
+        clc
+        adc #HMSB_OAM_OFFSET
+        tax
+        pla
+        ora OAMBuffer, X
+        sta OAMBuffer, X
+BrickCollisionDone:
+        jmp UpdateBallOAM           ; ball-brick collision done
 
-:       jmp UpdateBallOAM           ; ball-brick collision done
-
-        ; lda NewVPos
-        ; xba
-        ; lda NewHPos
-        ; check right edge of brick is to the right of ball's left edge
-        ; clc
-        ; adc Ball+ObjData::HSize
-        ; cmp Ball+ObjData::HPos
-        ; bcs :+
-        ; jmp BrickDone
-        ; ;
-
-
-
-        ; lda OAMBuffer, Y        ; get brick coordinates
 BrickDone:
         iny                     ; increase brick counter by 4
         iny
         iny
         iny
         cpy #$150               ; if Y >= 84 * 4 = 336
-        bcc BrickLoop
+        ; bcc BrickLoop
+        bcs :+
+        jmp BrickLoop
+:
 
 
 
