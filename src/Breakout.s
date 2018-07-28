@@ -613,6 +613,12 @@ BrickLoop:
         lda OAMBuffer+2, Y
         eor #OAM_PRIO_BITS          ; invert OAM prio bits
         sta OAMBuffer+2, Y
+        ; move destroyed brick offscreen by setting HMSB bit
+        ; tya                         ; set brick number into A
+        ; ShiftARight $02             ; divide by 4
+        ; phy                         ; save brick number on stack
+        ; ShiftARight $03             ; HMSB table offset in X = Y / 8
+
 :       jmp UpdateBallOAM           ; ball-brick collision done
 
         ; lda NewVPos
