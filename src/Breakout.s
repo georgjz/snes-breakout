@@ -600,48 +600,91 @@ BrickLoop:
         bcs :+
             jmp BrickDone
 :
+        .byte $42, $00              ; breakpoint
         ; get direction
-        lda #$00                    ; clear B
-        xba
-        ; SetA8
-        lda NewHPos                 ; get horizontal ball mid-point
+        lda NewHPos                 ; get ball mid-point
         clc
         adc #$04
-        cmp OAMBuffer, Y
-        bcc :++                     ; if Ball.HPos + 4 < Brick.HPos, skip
-        lda #$00                    ; else, flip vertical speed
+        cmp OAMBuffer, Y            ; compare to horizontal brick position
+        bcc :++++                       ; if mid-point < Brick.HPos, skip
+            ; else, check if to right of brick
+            clc
+            sbc #BRICK_HSIZE
+            cmp OAMBuffer, Y
+            bcc :++++                       ; if mid-point < Brick.HPos + Brick.HSize, skip
+                ; else, check if brick to the left destroyed
+                pha                         ; save A on stack
+                SetA16
+                lda OAMBuffer+2+4, Y        ; get OAM byte of brick to the left
+                and #OAM_PRIO_BITS
+                eor #DESTROYED_BRICK
+                SetA8
+                beq :++                       ; if brick is destroy, skip
+                    ; else, collision with brick to the left
+                    pla                         ; restore stack pointer
+                    iny                         ; increase Y by 4, so collision with next brick
+                    iny
+                    iny
+                    iny
+                    lda #$00                    ; flip V speed
+                    sec
+                    sbc Ball+ObjData::VSpeed
+                    sta Ball+ObjData::VSpeed
+                    tax                         ; get V speed sign
+                    bpl :+                      ; if positive, skip
+                    lda OAMBuffer+1, Y          ; else, reposition above brick
+                    sec
+                    sbc Ball+ObjData::VSize
+                    sta NewVPos
+                    jmp CheckBrickType          ; ball-brick collision done
+                :   lda OAMBuffer+1, Y          ; reposition below brick
+                    clc
+                    adc #BRICK_VSIZE
+                    sta NewVPos
+                    jmp CheckBrickType          ; ball-brick collision done
+            ; check vertical position
+:           pla                     ; restore stack pointer
+            lda NewVPos             ; get ball mid-point
+            clc
+            adc #$02
+            sec
+            sbc #BRICK_VSIZE
+            cmp OAMBuffer+1, Y
+            bcs :++                   ; if no horizontal collision, skip
+                ; else, horizontal collision
+                lda #$00            ; flip H speed
+                sec
+                sbc Ball+ObjData::HSpeed
+                sta Ball+ObjData::HSpeed
+                bpl :+                      ; if positive, skip
+                lda OAMBuffer, Y          ; else, reposition right brick
+                sec
+                sbc Ball+ObjData::HSize
+                sta NewHPos
+                jmp CheckBrickType          ; ball-brick collision done
+            :   lda OAMBuffer, Y            ; reposition below brick
+                clc
+                adc #BRICK_HSIZE
+                sta NewHPos
+                jmp CheckBrickType
+    ; stanard case
+:       lda #$00                    ; flip V speed
         sec
         sbc Ball+ObjData::VSpeed
         sta Ball+ObjData::VSpeed
-        tax                         ; check sign of vertical speed
-        bpl :+                      ; if position, reposition down
-        lda OAMBuffer+1, Y          ; get vertical brick position
+        tax                         ; get V speed sign
+        bpl :+                      ; if positive, skip
+        lda OAMBuffer+1, Y          ; else, reposition above brick
         sec
-        sbc Ball+ObjData::VSize     ; subtract vertical ball size
-        sta NewVPos                 ; store new vertical ball position
-        jmp CheckBrickType
-:       lda OAMBuffer+1, Y
+        sbc Ball+ObjData::VSize
+        sta NewVPos
+        jmp CheckBrickType          ; ball-brick collision done
+:       lda OAMBuffer+1, Y          ; reposition below brick
         clc
         adc #BRICK_VSIZE
         sta NewVPos
-        jmp CheckBrickType
-:
-        ; flip horizontal speed
-        lda #$00
-        sec
-        sbc Ball+ObjData::HSpeed
-        sta Ball+ObjData::HSpeed
-        tax
-        bpl :+
-        lda OAMBuffer, Y
-        sec
-        sbc Ball+ObjData::HSize
-        sta NewHPos
-        jmp CheckBrickType
-:       lda OAMBuffer, Y
-        clc
-        adc #BRICK_HSIZE
-        sta NewHPos
+    ; jmp CheckBrickType          ; ball-brick collision done
+
 
         .byte $42, $00              ; breakpoint
         ; check prio
@@ -677,8 +720,6 @@ CheckBrickType:
 :
         pha
         lda RDDIVL
-        ; dec
-        ; asl
         clc
         adc #HMSB_OAM_OFFSET
         tax
@@ -700,7 +741,6 @@ BrickDone:
 :
 
 
-
 UpdateBallOAM:
         SetA16
         lda NewHPos             ; get new position from stack
@@ -709,22 +749,6 @@ UpdateBallOAM:
         sta OAMBuffer, X        ; update ball OAM buffer data
         SetA8
 
-
-        ;   do collision checks
-        ;       check collision with paddle
-        ;           if collision
-        ;               calculate new ball speed
-        ;               skip brick collision
-        ;       check collision with bricks:
-        ;       for i : bricks
-        ;           if (!brick is visible)
-        ;               next
-        ;           if (brick and ball collide)
-        ;               calculate new ball speed
-        ;               if (!brick is solid)
-        ;                   set brick visibility to false
-        ;               skip remaining bricks
-        ;
         ; if level won
         ;   display level
         ;   increase level
