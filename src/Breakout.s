@@ -442,6 +442,7 @@ UpdateBall:
         bcs :+
         jmp PaddleCollisionDone
 :
+        ; .byte 42, 00
         ; handle collision between ball and paddle
         ; check whether ball midpoint is above paddle
         ; TODO: Remove static data
@@ -550,13 +551,93 @@ PaddleRightEdgeCollision:
 
 
 PaddleCollisionDone:
-        ; check brick collisions
+        ; .byte $42, $00          ; breakpoint
+        ; check ball-brick collisions
         ; A - calculated data
         ; X - auxiliar
         ; Y - brick counter
-        ; ldy #$00
-        ; SetA16
-        ; lda OAMBuffer, Y        ;
+        ldy #$00
+BrickLoop:
+        SetA16
+        lda OAMBuffer+2, Y      ; get brick OAM attribute bytes
+        and #OAM_PRIO_BITS      ; mask prio bits
+        eor #DESTROYED_BRICK    ; check if brick is already destroyed...
+        beq BrickDone           ; ...if so, go to next brick
+        ; else, conduct AABB check between ball and brick
+        tax                     ; save vertical and horizontal position in X
+        SetA8                   ; brick horizontal position now in A, vertical in B
+        ; check if ball's right edge is to the right of brick's left edge
+        lda NewHPos                 ; get new position
+        clc                         ; add horizontal size of ball
+        adc Ball+ObjData::HSize
+        cmp OAMBuffer, Y            ; compare to brick's horizontal position
+        bcs :+
+        jmp BrickDone
+        ; check if ball's left edge is to the right of brick's left edge
+:       lda OAMBuffer, Y            ; get horizontal position of brick
+        clc                         ; add horizontal brick size
+        adc #BRICK_HSIZE
+        cmp NewHPos                 ; compare to the new horizontal position/left edge of ball
+        bcs :+
+        jmp BrickDone
+        ; check vertical collision axis
+        ; check if ball's lower edge is below brick's upper edge
+:       lda NewVPos                 ; get new vertical position of ball
+        clc                         ; add verticall ball size
+        adc Ball+ObjData::VSize
+        cmp OAMBuffer+1, Y
+        bcs :+
+        jmp BrickDone
+        ; check if bricks's lower edge is above ball's upper edge
+:       lda OAMBuffer+1, Y          ; get vertical position of brick
+        clc                         ; add vertical size of brick
+        adc #BRICK_VSIZE
+        cmp NewVPos                 ; compare to new vertical position of ball
+        bcs :+
+        jmp BrickDone
+:
+
+        ; get direction
+
+        ; reposition ball
+
+        ; flip speed(s)
+
+        .byte $42, $00
+        ; check prio
+        SetA16
+        lda OAMBuffer+2, Y          ; get OAM attribute bytes
+        and #OAM_PRIO_BITS          ; mask prio bits
+        eor #DESTROYABLE_BRICK      ; if it's not a destroyable brick...
+        bne :+                      ; ...skip
+        lda OAMBuffer+2, Y
+        eor #OAM_PRIO_BITS          ; invert OAM prio bits
+        sta OAMBuffer+2, Y
+:       jmp UpdateBallOAM           ; ball-brick collision done
+
+        ; lda NewVPos
+        ; xba
+        ; lda NewHPos
+        ; check right edge of brick is to the right of ball's left edge
+        ; clc
+        ; adc Ball+ObjData::HSize
+        ; cmp Ball+ObjData::HPos
+        ; bcs :+
+        ; jmp BrickDone
+        ; ;
+
+
+
+        ; lda OAMBuffer, Y        ; get brick coordinates
+BrickDone:
+        iny                     ; increase brick counter by 4
+        iny
+        iny
+        iny
+        cpy #$150               ; if Y >= 84 * 4 = 336
+        bcc BrickLoop
+
+
 
 UpdateBallOAM:
         SetA16
@@ -669,7 +750,7 @@ Done:
         ldx #BALL_OAM_OFFSET    ; use X as offset into OAM buffer
         lda Ball+ObjData::HPos  ; get current ball position
         sta OAMBuffer, X        ; store ball position in OAM buffer
-        lda #$3008              ; no flip, palette 0, name $08
+        lda #$3008              ; no flip, prio 3, palette 0, name $08
         sta OAMBuffer + $02, X
         SetA8
 
