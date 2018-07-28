@@ -23,8 +23,8 @@
 ;-------------------------------------------------------------------------------
 PADDLE_START_HPOS   = $6c
 PADDLE_START_VPOS   = $d0
-INITIAL_BALL_HSPEED = $02
-INITIAL_BALL_VSPEED = $fe
+INITIAL_BALL_HSPEED = $01
+INITIAL_BALL_VSPEED = $ff
 UPPER_BOUNDRY       = $10
 LOWER_BOUNDRY       = $e0
 LEFT_BOUNDRY        = $10
@@ -32,6 +32,12 @@ RIGHT_BOUNDRY       = $f0
 PADDLE_OAM_OFFSET   = $150
 BALL_OAM_OFFSET     = $158
 HMSB_OAM_OFFSET     = $200
+DESTROYED_BRICK     = $1000
+DESTROYABLE_BRICK   = $2000
+SOLID_BRICK         = $3000
+OAM_PRIO_BITS       = $3000
+BRICK_HSIZE         = $20
+BRICK_VSIZE         = $08
 ;-------------------------------------------------------------------------------
 
 .endif  ; GACONSTANTS_INC

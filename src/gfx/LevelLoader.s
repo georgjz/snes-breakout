@@ -24,6 +24,7 @@
 .include "WRAMPointers.inc"
 .include "BaseColors.inc"
 .include "GfxData.inc"
+.include "GameConstants.inc"
 ;-------------------------------------------------------------------------------
 
 ;-------------------------------------------------------------------------------
@@ -89,35 +90,31 @@ OAMAttribDone:
         tya                     ; get the brick counter
         ; calculate horizontal position: HPos = $10 + (brick mod 7) * $20
         ; divide brick number by 7
-        phy                     ; save current brick number on stack
-        pha                     ; push numerator to stack
-        lda #$07                ; load denominator...
-        pha                     ; ...and push to stack
-        lda #$00                ; will hold remainder (= brick number mod 7)
-        ldy #$07                ; bit counter
-        tsx                     ; use X as offset to access numerator and denominator in zero page/stack
-        ; TODO: Replace with SNES division, saves a LOT of cycles
-        clc
-:       rol $02, X
-        rol
-        cmp $01, X
-        bcc :+
-        sbc $01, X
-:       dey
-        bpl :--
-        rol $02, X
+        sta WRDIVL              ; brick counter is low byte of dividend
+        stz WRDIVH              ; high byte of dividend is zero
+        lda #$07
+        sta WRDIVB              ; divide dividend by divisor $07
+        
+        nop                     ; wait for 16 cycles
+        nop
+        nop
+        nop
+
+        nop
+        nop
+        nop
+        nop
+
+        lda RDMPYL              ; get remainder
         ShiftALeft $05          ; multiply remainder by $20
         clc                     ; add screen boundry offset...
-        adc #$10                ; ...of $10
-        xba                     ; save horizontal position in B
-        ; calculate vertical position: VPos = $10 + (brick / 7) * $08
-        pla                     ; pull denominator
-        pla                     ; pull quotient
+        adc #LEFT_BOUNDRY
+        xba
+        lda RDDIVL              ; get quotient
         ShiftALeft $03          ; multiply quotient by $08
         clc                     ; add screen boundry offset...
         adc #$10                ; ...of $10
         xba                     ; final position: VPos in B, HPos in A
-        ply                     ; pull brick counter back into Y
         SetA16                  ; set A to 16-bit
         pha                     ; save position data on stack
 
