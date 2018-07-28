@@ -355,55 +355,55 @@ UpdateBall:
         sbc Ball+ObjData::HSize
         cmp NewHPos                 ; compare to updated horizontal position
         bcs :+                      ; if ball is to left of right boundry - size, skip to left boundry
-        sta NewHPos                 ; else, reposition ball
-        lda #$00                    ; and invert horizontal speed by...
-        sec                         ; ...subtracting speed from zero
-        sbc Ball+ObjData::HSpeed
-        sta Ball+ObjData::HSpeed    ; store inverted speed
-        jmp UpdateBallOAM
+            sta NewHPos                 ; else, reposition ball
+            lda #$00                    ; and invert horizontal speed by...
+            sec                         ; ...subtracting speed from zero
+            sbc Ball+ObjData::HSpeed
+            sta Ball+ObjData::HSpeed    ; store inverted speed
+            jmp UpdateBallOAM
         ; left boundry
 :       lda #LEFT_BOUNDRY           ; get left playfield boundry
         cmp NewHPos                 ; compare to new position
         bcc :+                      ; if ball is to right of left boundry, skip to upper boundry
-        sta NewHPos                 ; else, reposition ball
-        lda #$00                    ; and invert horizontal speed by...
-        sec                         ; ...subtracting speed from zero
-        sbc Ball+ObjData::HSpeed
-        sta Ball+ObjData::HSpeed    ; store inverted speed
-        jmp UpdateBallOAM
+            sta NewHPos                 ; else, reposition ball
+            lda #$00                    ; and invert horizontal speed by...
+            sec                         ; ...subtracting speed from zero
+            sbc Ball+ObjData::HSpeed
+            sta Ball+ObjData::HSpeed    ; store inverted speed
+            jmp UpdateBallOAM
         ; upper boundry
 :       lda #UPPER_BOUNDRY          ; get upper playfield boundry
         cmp NewVPos                 ; compare to updated vertical ball position
         bcc :+                      ; if ball is below upper boundry, skip to lower boundry
-        sta NewVPos                 ; else, reposition ball
-        lda #$00                    ; and invert ball speed...
-        sec                         ; ...by subtracting speed from zero
-        sbc Ball+ObjData::VSpeed
-        sta Ball+ObjData::VSpeed    ; store inverted speed
+            sta NewVPos                 ; else, reposition ball
+            lda #$00                    ; and invert ball speed...
+            sec                         ; ...by subtracting speed from zero
+            sbc Ball+ObjData::VSpeed
+            sta Ball+ObjData::VSpeed    ; store inverted speed
         ; lower boundry, game over
 :       lda #LOWER_BOUNDRY          ; get lower playfield boundry
         cmp NewVPos                 ; compare to updated vertical ball position
         bcs :+                      ; if ball is above lower boundry, skip
-        ; else, game over, fade out and return to start menu
-        jsr FadeOut                 ; fade out
-        lda # (FORCED_BLANKING_ON)  ; turn on forced blanking
-        sta INIDISP
-        stz NMITIMEN                ; turn off NMI
-        ; set background 1 to splash screen
-        lda # (SPLASH_MAP_SEG << 2 | BG1_SC_SIZE_32)
-        sta BG1SC
-        lda #$01                    ; make BG1 visible
-        sta TM
-        stz LevelToLoad             ; reset level to load to zero
-        ; turn on forced blanking and NMI
-        lda # (FORCED_BLANKING_OFF | $00)
-        sta INIDISP
-        lda #$81
-        sta NMITIMEN
-        jsr FadeIn                  ; fade in
-        lda #GAME_STATE_MENU        ; set game state to menu
-        sta GameState
-        jmp Done                    ; exit subroutine
+            ; else, game over, fade out and return to start menu
+            jsr FadeOut                 ; fade out
+            lda # (FORCED_BLANKING_ON)  ; turn on forced blanking
+            sta INIDISP
+            stz NMITIMEN                ; turn off NMI
+            ; set background 1 to splash screen
+            lda # (SPLASH_MAP_SEG << 2 | BG1_SC_SIZE_32)
+            sta BG1SC
+            lda #$01                    ; make BG1 visible
+            sta TM
+            stz LevelToLoad             ; reset level to load to zero
+            ; turn on forced blanking and NMI
+            lda # (FORCED_BLANKING_OFF | $00)
+            sta INIDISP
+            lda #$81
+            sta NMITIMEN
+            jsr FadeIn                  ; fade in
+            lda #GAME_STATE_MENU        ; set game state to menu
+            sta GameState
+            jmp Done                    ; exit subroutine
 :
 
         ; check if ball collides with paddle
@@ -415,7 +415,7 @@ UpdateBall:
         cmp Paddle+ObjData::HPos
         ; bcc PaddleCollisionDone     ; if not, no collision
         bcs :+
-        jmp PaddleCollisionDone
+            jmp PaddleCollisionDone
         ; check if ball's left edge is to the right of paddle's left edge
 :       lda Paddle+ObjData::HPos    ; get current horizontal position of paddle
         clc                         ; add horizontal paddle size
@@ -423,7 +423,7 @@ UpdateBall:
         cmp NewHPos                 ; compare to the new horizontal position/left edge of ball
         ; bcc PaddleCollisionDone      ; if not, no collision
         bcs :+
-        jmp PaddleCollisionDone
+            jmp PaddleCollisionDone
         ; check vertical collision axis
         ; check if ball's lower edge is below paddle's upper edge
 :       lda NewVPos                 ; get new vertical position of ball
@@ -432,7 +432,7 @@ UpdateBall:
         cmp Paddle+ObjData::VPos
         ; bcc PaddleCollisionDone     ; if not, no collision
         bcs :+
-        jmp PaddleCollisionDone
+            jmp PaddleCollisionDone
         ; check if paddle's lower edge is above ball's upper edge
 :       lda Paddle+ObjData::VPos    ; get vertical position of paddle
         clc                         ; add vertical size of paddle
@@ -440,7 +440,7 @@ UpdateBall:
         cmp NewVPos                 ; compare to new vertical position of ball
         ; bcc PaddleCollisionDone     ; if not, no collision
         bcs :+
-        jmp PaddleCollisionDone
+            jmp PaddleCollisionDone
 :
         ; .byte 42, 00
         ; handle collision between ball and paddle
@@ -510,7 +510,7 @@ PaddleLeftEdgeCollision:
         ;
 PaddleRightEdgeCollision:
         .byte $42, $00              ; breakpoint
-        lda NewVPos
+        lda NewVPos                 ; check ball mid-point position
         clc
         adc #$04
         cmp Paddle+ObjData::VPos
@@ -556,32 +556,34 @@ PaddleCollisionDone:
         ; A - calculated data
         ; X - auxiliar
         ; Y - brick counter
+        ; 1. check if brick is already destroyed, if so, skip to next brick
+        ; 2. check ball-brick collision with AABB routine
+        ; 3. check with brick edge collided with ball
         ldy #$00
 BrickLoop:
         SetA16
-        lda OAMBuffer+2, Y      ; get brick OAM attribute bytes
-        and #OAM_PRIO_BITS      ; mask prio bits
-        eor #DESTROYED_BRICK    ; check if brick is already destroyed...
-        ; beq BrickDone           ; ...if so, go to next brick
-        bne :+                  ; ...if so, go to next brick
-        jmp BrickDone
+        lda OAMBuffer+2, Y          ; get brick OAM attribute bytes
+        and #OAM_PRIO_BITS          ; mask prio bits
+        eor #DESTROYED_BRICK        ; check if brick is already destroyed...
+        bne :+
+            jmp BrickDone           ; ...if so, go to next brick
         ; else, conduct AABB check between ball and brick
-:        tax                     ; save vertical and horizontal position in X
-        SetA8                   ; brick horizontal position now in A, vertical in B
+:       tax                         ; save vertical and horizontal position in X
+        SetA8                       ; brick horizontal position now in A, vertical in B
         ; check if ball's right edge is to the right of brick's left edge
         lda NewHPos                 ; get new position
         clc                         ; add horizontal size of ball
         adc Ball+ObjData::HSize
         cmp OAMBuffer, Y            ; compare to brick's horizontal position
         bcs :+
-        jmp BrickDone
+            jmp BrickDone
         ; check if ball's left edge is to the right of brick's left edge
 :       lda OAMBuffer, Y            ; get horizontal position of brick
         clc                         ; add horizontal brick size
         adc #BRICK_HSIZE
         cmp NewHPos                 ; compare to the new horizontal position/left edge of ball
         bcs :+
-        jmp BrickDone
+            jmp BrickDone
         ; check vertical collision axis
         ; check if ball's lower edge is below brick's upper edge
 :       lda NewVPos                 ; get new vertical position of ball
@@ -589,20 +591,20 @@ BrickLoop:
         adc Ball+ObjData::VSize
         cmp OAMBuffer+1, Y
         bcs :+
-        jmp BrickDone
+            jmp BrickDone
         ; check if bricks's lower edge is above ball's upper edge
 :       lda OAMBuffer+1, Y          ; get vertical position of brick
         clc                         ; add vertical size of brick
         adc #BRICK_VSIZE
         cmp NewVPos                 ; compare to new vertical position of ball
         bcs :+
-        jmp BrickDone
+            jmp BrickDone
 :
         ; get direction
         lda #$00                    ; clear B
         xba
         ; SetA8
-        lda NewHPos                 ; get horizontal ball position
+        lda NewHPos                 ; get horizontal ball mid-point
         clc
         adc #$04
         cmp OAMBuffer, Y
@@ -641,7 +643,7 @@ BrickLoop:
         adc #BRICK_HSIZE
         sta NewHPos
 
-        .byte $42, $00
+        .byte $42, $00              ; breakpoint
         ; check prio
 CheckBrickType:
         SetA16
@@ -655,14 +657,12 @@ CheckBrickType:
         sta WRDIVL                  ; set dividend
         lda #$04
         sta WRDIVB                  ; set divisor
+        ; destroy the brick while SNES is dividing
         lda OAMBuffer+2, Y
         eor #OAM_PRIO_BITS          ; invert OAM prio bits
         sta OAMBuffer+2, Y
         nop                         ; wait additional 4 cycles
         nop
-        ; lda RDDIVL                  ; get quotient
-        ; asl                         ; multiply by 2
-        ; tax                         ; use quotient as offset into HMSB table
         ; calculate bitmask
         lda RDMPYL                  ; get remainder...
         pha                         ; ...and save on stack
