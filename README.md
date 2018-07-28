@@ -36,3 +36,5 @@ Several features are still missing:
 * The brick-ball collision detection logic is a mess. This can lead to some odd/fault behavior now and then.
 * The ball has constant speed, the angle between ball and paddle never changes. This will change in the future.
 * The weird background is due to a missing feature: as of now I move the destroyed bricks off screen. But in the final version, I wish to hide the destroyed bricks behind a opaque screen (hence the file name in `gfx/`) by simply changing their sprite priority (this is already implementen in `Breakout.s`, actually)
+
+Some parts of the code are very messy. But I follow the old C programming rule here: *First make it run, then make it run fast!*
